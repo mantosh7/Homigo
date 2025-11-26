@@ -1,4 +1,3 @@
-// run with: node seed/create_admin.js
 const pool = require('../db');
 const bcrypt = require('bcrypt');
 

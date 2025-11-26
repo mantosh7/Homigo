@@ -1,4 +1,3 @@
-// db.js - mysql2 promise pool
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
