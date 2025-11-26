@@ -1,24 +1,4 @@
-// import Card from '../../components/ui/Card'
 
-// export default function Dashboard(){
-//   return (
-//     <div className="space-y-6">
-//       <div className="grid grid-cols-4 gap-4">
-//         <Card className="p-6"><div>Total Rooms</div><div className="text-2xl font-bold mt-4">1</div></Card>
-//         <Card className="p-6"><div>Occupied</div><div className="text-2xl font-bold mt-4">1</div></Card>
-//         <Card className="p-6"><div>Vacant</div><div className="text-2xl font-bold mt-4">0</div></Card>
-//         <Card className="p-6"><div>Active Tenants</div><div className="text-2xl font-bold mt-4">1</div></Card>
-//       </div>
-
-//       <div className="grid grid-cols-2 gap-6">
-//         <Card className="p-6"><h3 className="font-semibold mb-2">Recent Tenants</h3><div>No tenants yet</div></Card>
-//         <Card className="p-6"><h3 className="font-semibold mb-2">Recent Complaints</h3><div>No complaints yet</div></Card>
-//       </div>
-//     </div>
-//   )
-// }
-
-// src/pages/admin/Dashboard.jsx
 import { useEffect, useState, useCallback } from 'react'
 import Card from '../../components/ui/Card'
 import { getRooms } from '../../services/roomService'
