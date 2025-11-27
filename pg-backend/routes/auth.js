@@ -1,4 +1,3 @@
-// routes/auth.js
 const express = require('express');
 const pool = require('../db');
 const bcrypt = require('bcrypt');
@@ -60,11 +59,16 @@ router.post('/tenant/login', async (req, res, next) => {
   } catch (err) { next(err) }
 });
 
-// LOGOUT
-router.post('/logout', async (req, res) => {
-  res.clearCookie('token', { httpOnly: true, secure: COOKIE_SECURE, sameSite: 'lax' });
-  res.json({ ok: true });
+// LOGOUT 
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: COOKIE_SECURE,
+    sameSite: 'lax'
+  });
+  return res.json({ ok: true, message: 'Logged out' });
 });
+
 
 // ME - read user from cookie
 router.get('/me', async (req, res) => {
@@ -77,5 +81,7 @@ router.get('/me', async (req, res) => {
     return res.status(200).json({ user: null });
   }
 });
+
+
 
 module.exports = router;

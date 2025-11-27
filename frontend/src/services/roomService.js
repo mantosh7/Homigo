@@ -1,33 +1,37 @@
-// import api from './api'
-// export const getRooms = ()=> api.get('/rooms/all').then(r=>r.data)
-// export const createRoom = (data)=> api.post('/rooms/add', data).then(r=>r.data)
-// export const updateRoom = (id,data)=> api.put(`/rooms/update/${id}`, data)
-// export const deleteRoom = (id)=> api.delete(`/rooms/delete/${id}`)
-
-// src/services/roomService.js
 import api from './api'
 
-export const getRooms = () => api.get('/rooms/all').then(r => r.data)
+async function handleResponse(promise) {
+  try {
+    const res = await promise
+    return res.data
+  } catch (err) {
+    const msg = err?.response?.data?.message || err?.message || 'Request failed'
+    const e = new Error(msg)
+    e.original = err
+    throw e
+  }
+}
+
+export const getRooms = () => handleResponse(api.get('/rooms/all'))
 
 /**
  * createRoom returns the created room object (res.data) and
  * dispatches a 'roomsChanged' event so other parts of app can refresh.
  */
 export const createRoom = async (data) => {
-  const res = await api.post('/rooms/add', data)
-  // Notify the rest of the app that rooms changed
-  try { window.dispatchEvent(new Event('roomsChanged')) } catch(e) {}
-  return res.data
+  const result = await handleResponse(api.post('/rooms/add', data))
+  try { window.dispatchEvent(new Event('roomsChanged')) } catch (e) { /* ignore */ }
+  return result
 }
 
 export const updateRoom = async (id, data) => {
-  const res = await api.put(`/rooms/update/${id}`, data)
-  try { window.dispatchEvent(new Event('roomsChanged')) } catch(e) {}
-  return res.data
+  const result = await handleResponse(api.put(`/rooms/update/${id}`, data))
+  try { window.dispatchEvent(new Event('roomsChanged')) } catch (e) { /* ignore */ }
+  return result
 }
 
 export const deleteRoom = async (id) => {
-  const res = await api.delete(`/rooms/delete/${id}`)
-  try { window.dispatchEvent(new Event('roomsChanged')) } catch(e) {}
-  return res.data
+  const result = await handleResponse(api.delete(`/rooms/delete/${id}`))
+  try { window.dispatchEvent(new Event('roomsChanged')) } catch (e) { /* ignore */ }
+  return result
 }

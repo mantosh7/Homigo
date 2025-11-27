@@ -6,6 +6,8 @@ export const getTenants = () =>
 export const createTenant = (data) =>
   api.post('/tenants/add', data).then(r => r.data);
 
-// Permanent Delete
 export const deleteTenant = (id) =>
   api.delete(`/tenants/delete/${id}`).then(r => r.data);
+
+export const updateTenant = (id, data) =>
+  api.put(`/tenants/update/${id}`, data).then(r => r.data);
