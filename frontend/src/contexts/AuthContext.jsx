@@ -1,7 +1,6 @@
 import { createContext, useState, useEffect } from 'react'
 import api from '../services/api'
 
-// use robust jwt decode only if needed — we will rely on server's /auth/me
 export const AuthContext = createContext()
 
 export function AuthProvider({children}){
