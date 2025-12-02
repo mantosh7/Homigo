@@ -14,6 +14,8 @@ router.use(express.json());
 // Keep cookieParser usage consistent (server.js already uses it; harmless here if called again)
 router.use(cookieParser());
 
+//---------------------  ADMIN SECTION ----------------------------------------
+
 // ADMIN SIGNUP
 router.post("/admin/signup", async (req, res, next) => {
   try {
@@ -58,17 +60,27 @@ router.post('/admin/login', async (req, res, next) => {
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
     const payload = { id: admin.id, role: 'admin', email: admin.email, name: admin.name };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });
 
     res.cookie('token', token, {
       httpOnly: true,
       secure: COOKIE_SECURE,
       sameSite: 'lax',
-      maxAge: 8 * 3600 * 1000
+      maxAge: 12 * 3600 * 1000
     });
 
     res.json({ user: payload });
   } catch (err) { next(err) }
+});
+
+// ADMIN LOGOUT (unchanged)
+router.post('/admin/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: COOKIE_SECURE,
+    sameSite: 'lax'
+  });
+  return res.json({ ok: true, message: 'Logged out' });
 });
 
 // TENANT LOGIN (unchanged)
@@ -95,15 +107,7 @@ router.post('/tenant/login', async (req, res, next) => {
   } catch (err) { next(err) }
 });
 
-// LOGOUT (unchanged)
-router.post('/logout', (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: COOKIE_SECURE,
-    sameSite: 'lax'
-  });
-  return res.json({ ok: true, message: 'Logged out' });
-});
+
 
 // ME - read user from cookie (unchanged)
 router.get('/me', async (req, res) => {

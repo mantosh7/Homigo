@@ -1,8 +1,21 @@
+import useAuth from '@/hooks/useAuth';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Landing() {
   const navigate = useNavigate();
+  const {user, loading} = useAuth() ;
+
+  function handleClick(e){
+    e.preventDefault() ;
+    if(loading){
+      alert("loading") ;
+      return ;
+    }
+
+    if(user && user.role==="admin") navigate("/admin/dashboard") ;
+    else navigate("/admin/login") ;
+  }
 
   return (
     <div className="min-h-screen bg-[#1a2332] text-white flex">
@@ -27,7 +40,8 @@ export default function Landing() {
 
             <div className="flex gap-8">
               <button
-                onClick={() => navigate('/admin/login')}
+                // onClick={() => navigate('/admin/login')}
+                onClick={handleClick}
                 className="bg-gradient-to-r from-[#ff6b4a] to-[#ff8a6b] text-white font-semibold px-10 py-2 rounded-lg hover:shadow-lg transition-all"
               >
                 Admin

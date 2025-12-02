@@ -4,31 +4,40 @@ import Card from '../../../components/ui/Card'
 import Modal from '../../../components/ui/Modal'
 import TenantForm from './TenantForm'
 import { getTenants, createTenant, deleteTenant, updateTenant } from '../../../services/tenantService';
-import { getRooms } from '../../../services/roomService'   
+import { getRooms } from '../../../services/roomService'
 
-// Date formatter function
 const fmt = (d) => d ? dayjs(d).format('MMM D, YYYY') : ''
 
 export default function TenantsList() {
   const [tenants, setTenants] = useState([])
-  const [rooms, setRooms] = useState([])                
+  const [rooms, setRooms] = useState([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
+  const [opLoading, setOpLoading] = useState(false)
 
-  // build map id -> room_number for quick lookup
+  // map room id -> room_number
   const roomMap = useMemo(() => {
     const m = {}
     rooms.forEach(r => { m[r.id] = r.room_number })
     return m
   }, [rooms])
 
+  // on mount: fetch tenants then rooms (simple sequential awaits)
   useEffect(() => {
-    fetchList()
-    fetchRooms()
+    async function load() {
+      setLoading(true)
+      try {
+        await fetchList()
+        await fetchRooms()
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [])
 
-  async function fetchRooms() {                    
+  async function fetchRooms() {
     try {
       const r = await getRooms()
       setRooms(r || [])
@@ -39,43 +48,32 @@ export default function TenantsList() {
   }
 
   async function fetchList() {
-    setLoading(true)
     try {
       const data = await getTenants()
       setTenants(data || [])
     } catch (e) {
       console.error('Failed to fetch tenants', e)
       setTenants([])
-    } finally {
-      setLoading(false)
     }
   }
 
-  async function onCreate(payload) {
-    try {
-      await createTenant(payload)
-      setOpen(false)
-      fetchList()
-    } catch (err) {
-      console.error('Create tenant failed', err)
-      alert(err?.response?.data?.message || 'Failed to add tenant')
-    }
-  }
-
+  // delete tenant -> refresh tenants then rooms
   async function onMoveOut(id) {
     if (!confirm('This will permanently delete the tenant. Continue?')) return;
-
+    setOpLoading(true)
     try {
-      await deleteTenant(id);
-      fetchList();
+      await deleteTenant(id)
+      await fetchList()
+      await fetchRooms()
     } catch (e) {
-      console.error(e);
-      alert(e?.response?.data?.message || 'Failed to delete tenant');
+      console.error(e)
+      alert(e?.response?.data?.message || 'Failed to delete tenant')
+    } finally {
+      setOpLoading(false)
     }
   }
 
   function onEdit(tenant) {
-    // ensure room_id is numeric (TenantForm expects numbers)
     const normalized = {
       ...tenant,
       room_id: tenant.room_id === null || tenant.room_id === undefined
@@ -91,17 +89,38 @@ export default function TenantsList() {
     setOpen(true)
   }
 
-  // ---- helper to clean & format names ----
+  // save handler used by TenantForm (create or update)
+  async function handleSaveFromForm(payload) {
+    setOpLoading(true)
+    try {
+      if (editing) {
+        const id = editing.id || editing._id
+        if (payload.password === '') delete payload.password
+        await updateTenant(id, payload)
+      } else {
+        payload.full_name = cleanName(payload.full_name)
+        await createTenant(payload)
+      }
+
+      setOpen(false)
+      setEditing(null)
+      await fetchList()
+      await fetchRooms()
+    } catch (err) {
+      console.error('Save tenant failed', err)
+      alert(err?.response?.data?.message || 'Failed to save tenant')
+    } finally {
+      setOpLoading(false)
+    }
+  }
+
+  // name cleanup helper
   function cleanName(raw) {
     if (!raw) return ''
     let name = String(raw).trim()
-
-    // If first two letters are the same (case-insensitive), drop the first one
     if (name.length >= 2 && name[0].toLowerCase() === name[1].toLowerCase()) {
       name = name.slice(1)
     }
-
-    // collapse multiple spaces, then capitalize each word nicely
     name = name.replace(/\s+/g, ' ').trim()
     return name.split(' ').map(part => {
       if (!part) return ''
@@ -124,7 +143,7 @@ export default function TenantsList() {
         </button>
       </div>
 
-      {loading && <div className="text-gray-400">Loading tenants...</div>}
+      {(loading || opLoading) && <div className="text-gray-400">Loading...</div>}
 
       {!loading && tenants.length === 0 && (
         <Card className="p-12 text-center text-gray-400">
@@ -189,25 +208,7 @@ export default function TenantsList() {
         <TenantForm
           key={editing?.id ?? editing?._id ?? 'new'}
           initialValues={editing}
-          onSubmit={async (payload) => {
-            try {
-              if (editing) {
-                const id = editing.id || editing._id;
-                if (payload.password === '') delete payload.password;
-                await updateTenant(id, payload);
-              } else {
-                // sanitize name before sending (optional: you may also sanitize in form)
-                payload.full_name = cleanName(payload.full_name)
-                await createTenant(payload);
-              }
-              setOpen(false);
-              setEditing(null);
-              await fetchList();
-            } catch (err) {
-              console.error('Save tenant failed', err);
-              alert(err?.response?.data?.message || 'Failed to save tenant');
-            }
-          }}
+          onSubmit={handleSaveFromForm}
         />
       </Modal>
     </div>

@@ -37,19 +37,22 @@ export function AuthProvider({children}){
     return res.data ;
   }
   
+  // admin logout functionality
+  async function logoutAdmin(){
+    await api.post('/auth/admin/logout')
+    setUser(null)
+  }
+
+  // tenant login functionality
   async function loginTenant(email, password){
     const res = await api.post('/auth/tenant/login', { email, password })
     setUser(res.data.user)
     return res.data
   }
 
-  async function logout(){
-    await api.post('/auth/logout')
-    setUser(null)
-  }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, signupAdmin, loginAdmin, loginTenant, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, signupAdmin, loginAdmin, logoutAdmin, loginTenant, loading }}>
       {children}
     </AuthContext.Provider>
   )

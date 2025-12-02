@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import useAuth from '@/hooks/useAuth'
 
 function LinkItem({ to, children }) {
   return (
@@ -22,31 +23,16 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const {logoutAdmin} = useAuth() ;
 
-  async function handleLogout() {
+  async function handleLogout(e) {
+    e.preventDefault()
     setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => null)
-        throw new Error(err?.message || `Logout failed (${res.status})`)
-      }
-
-      try {
-        localStorage.clear()
-        sessionStorage.clear()
-      } catch (e) {}
-
-      navigate('/', { replace: true })
-    } catch (err) {
-      console.error('Logout error:', err)
-      setError(err.message || 'Logout failed')
+    try{
+      await logoutAdmin()
+      navigate('/admin/dashboard')
+    }catch(err){ 
+      alert('Logout failed: ' + (err.message || 'Please try again'))
     } finally {
       setLoading(false)
     }
