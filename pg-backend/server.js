@@ -12,6 +12,9 @@ const rentRoutes = require('./routes/rent');
 const complaintsRoutes = require('./routes/complaints');
 const errorHandler = require('./middleware/errorHandler');
 
+const tenantAuthRoutes = require("./routes/tenantAuth");
+const tenantRentRoutes = require('./routes/tenantRent');
+
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 
 app.use(express.json());
@@ -26,6 +29,10 @@ app.use('/api/rooms', roomsRoutes);
 app.use('/api/tenants', tenantsRoutes);
 app.use('/api/rent', rentRoutes);
 app.use('/api/complaints', complaintsRoutes);
+
+app.use("/api/tenant/auth", tenantAuthRoutes);
+app.use("/api/tenant", tenantRentRoutes);
+
 
 app.use(errorHandler);
 

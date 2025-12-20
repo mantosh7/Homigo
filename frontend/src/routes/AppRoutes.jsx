@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AdminLogin from '../pages/admin/AdminLogin'
+import AdminSignup from '@/pages/admin/AdminSignup'
 import AdminLayout from '../pages/admin/AdminLayout'
 import Dashboard from '../pages/admin/Dashboard'
 import RoomsList from '../pages/admin/Rooms/RoomsList'
@@ -10,9 +11,10 @@ import TenantLogin from '../pages/tenant/TenantLogin'
 import TenantLayout from '../pages/tenant/TenantLayout'
 import TenantDashboard from '../pages/tenant/TenantDashboard'
 import useAuth from '../hooks/useAuth'
+import MyRent from '../pages/tenant/MyRent'
+
 
 import Landing from '../pages/Landing'
-import AdminSignup from '@/pages/admin/AdminSignup'
 
 function RequireAdmin({children}){
   const { user, loading } = useAuth()
@@ -46,9 +48,11 @@ export default function AppRoutes(){
         <Route path="complaints" element={<ComplaintsList/>} />
       </Route>
 
+      {/* Tenant auth & protected area  */}
       <Route path="/tenant/login" element={<TenantLogin/>} />
       <Route path="/tenant" element={<RequireTenant><TenantLayout/></RequireTenant>}>
         <Route path="dashboard" element={<TenantDashboard/>} />
+        <Route path="rent" element={<MyRent/>} />
       </Route>
 
       <Route path="*" element={<div className="p-8">Not Found</div>} />
