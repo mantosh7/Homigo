@@ -4,11 +4,7 @@ const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-/**
- * ===========================
- * TENANT → ADD COMPLAINT
- * ===========================
- */
+// tenant complaint add
 router.post("/add", requireAuth("tenant"), async (req, res) => {
   try {
     const tenantId = req.user.id;
@@ -32,11 +28,7 @@ router.post("/add", requireAuth("tenant"), async (req, res) => {
   }
 });
 
-/**
- * ===========================
- * TENANT → VIEW OWN COMPLAINTS
- * ===========================
- */
+// tenant - view own complaints
 router.get("/", requireAuth("tenant"), async (req, res) => {
   try {
     const tenantId = req.user.id;
