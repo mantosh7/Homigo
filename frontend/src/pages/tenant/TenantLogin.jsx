@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from '../../hooks/useAuth';
+import HomeButton from "@/components/ui/HomeButton";
 
 const TenantLogin = () => {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const TenantLogin = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#020617] to-[#020617]">
+      <HomeButton />
       <div className="w-full max-w-md bg-[#020617]/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8">
         
         <h2 className="text-2xl font-bold text-white mb-1">

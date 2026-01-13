@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
+import HomeButton from '@/components/ui/HomeButton'
 
 export default function AdminSignup(){
   const [name, setName] = useState('')
@@ -32,6 +33,7 @@ export default function AdminSignup(){
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1a2332]">
+      <HomeButton />
       <div className="w-full max-w-md panel p-8 bg-slate-800 rounded-lg">
         <h2 className="text-2xl font-bold mb-2 text-white">Admin Signup</h2>
         <p className="text-sm text-slate-400 mb-6">Create your admin account</p>

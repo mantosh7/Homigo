@@ -12,6 +12,7 @@ import TenantLayout from '../pages/tenant/TenantLayout'
 import TenantDashboard from '../pages/tenant/TenantDashboard'
 import useAuth from '../hooks/useAuth'
 import MyRent from '../pages/tenant/MyRent'
+import Complaints from '@/pages/tenant/complaints'
 
 
 import Landing from '../pages/Landing'
@@ -53,6 +54,8 @@ export default function AppRoutes(){
       <Route path="/tenant" element={<RequireTenant><TenantLayout/></RequireTenant>}>
         <Route path="dashboard" element={<TenantDashboard/>} />
         <Route path="rent" element={<MyRent/>} />
+        <Route path="complaints" element={<Complaints />} />
+
       </Route>
 
       <Route path="*" element={<div className="p-8">Not Found</div>} />
