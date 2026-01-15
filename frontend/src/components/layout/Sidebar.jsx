@@ -42,8 +42,8 @@ export default function Sidebar() {
     <aside className="w-64 h-screen sticky top-0 p-6 bg-gradient-to-b from-[#071026] to-[#06101a] flex flex-col justify-between">
       <div>
         <div className="mb-8 ">
-          <div className="text-2xl font-bold text-[#F46A47]">PG Manager</div>
-          <div className="text-xs text-gray-400">Hostel Management</div>
+          <div className="text-2xl font-bold text-[#F46A47]">Homigo</div>
+          <div className="text-xs text-gray-400">Admin Portal</div>
         </div>
 
         <nav className="space-y-2">

@@ -28,14 +28,14 @@ export default function Landing() {
             </p>
 
             <h1 className="text-[64px] font-bold leading-[1.1] text-white">
-              Manage Your PG
+              Manage Your Accommodation
             </h1>
             <h1 className="text-[64px] font-bold leading-[1.1] text-[#ff6b4a] mb-8">
               Effortlessly
             </h1>
 
             <p className="text-[#c5d0de] text-[17px] leading-relaxed mb-10 w-[600px]">
-              A lightweight PG management system for owners and tenants — room allocation, rent tracking, tenant move-ins & move-outs and more.
+              A unified platform that brings structure, control, and visibility to accommodation operations.
             </p>
 
             <div className="flex gap-8">

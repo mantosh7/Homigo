@@ -46,8 +46,8 @@ export default function TenantSidebar() {
 
             <div>
                 <div className="mb-8">
-                    <div className="text-2xl font-bold text-[#F46A47]">PG Manager</div>
-                    <div className="text-xs text-gray-400">Tenant Panel</div>
+                    <div className="text-2xl font-bold text-[#F46A47]">Homigo</div>
+                    <div className="text-xs text-gray-400">Tenant Portal</div>
                 </div>
 
                 <nav className="space-y-2">
