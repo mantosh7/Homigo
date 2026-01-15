@@ -54,14 +54,14 @@ const Complaints = () => {
           />
 
           <textarea
-            className="w-full p-2 bg-transparent border rounded"
+            className="w-full p-2 bg-transparent border border-gray-600 rounded"
             placeholder="Describe your issue..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
 
           <select
-            className="w-full p-2 bg-transparent border rounded"
+            className="w-full p-2 bg-transparent border border-gray-600 rounded"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
           >
@@ -79,7 +79,7 @@ const Complaints = () => {
         </form>
       </Card>
 
-      {/* ================= Complaint List ================= */}
+      {/* ---------------- Complaint List --------------- */}
       <Card>
         <h2 className="text-xl font-semibold mb-4">My Complaints</h2>
 

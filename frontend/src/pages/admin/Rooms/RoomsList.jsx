@@ -72,8 +72,6 @@ export default function RoomsList(){
 }
 
   function onEdit(room){
-    // normalize initialValues for RoomForm
-    // RoomForm likely expects { room_number, room_type, floor, id } names — adapt if needed
     const initial = {
       id: room.id,
       room_number: room.room_number ?? room.number ?? '',

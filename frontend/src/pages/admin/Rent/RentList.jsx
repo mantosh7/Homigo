@@ -7,32 +7,30 @@ import { getTenants } from '../../../services/tenantService'
 import dayjs from 'dayjs'
 
 export default function RentList() {
+
+  // states
   const [pending, setPending] = useState([])
   const [tenants, setTenants] = useState([])
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
-  const [editing, setEditing] = useState(null) // not used for edit (backend has no update), kept for future
 
+  // Initial load
   useEffect(() => {
     load()
   }, [])
 
+  // Data loading
   async function load() {
     setLoading(true)
     try {
-      const [p, t] = await Promise.all([
-        getPending().catch(() => []),
-        getTenants().catch(() => [])
-      ])
-      // defensive: ensure arrays
-      setPending(p || [])
-      setTenants(t || [])
-      // helpful debug: uncomment if you need to inspect response shapes
-      // console.log('pending rents:', p)
-      // console.log('tenants:', t)
-    } catch (err) {
-      console.error('Failed to load rents/tenants', err)
+      const pendingRents = await getPending()
+      const tenantList = await getTenants()
+
+      setPending(pendingRents || [])
+      setTenants(tenantList || [])
+    } catch (error) {
+      console.error('Failed to load data', error)
       setPending([])
       setTenants([])
     } finally {
@@ -40,15 +38,18 @@ export default function RentList() {
     }
   }
 
+
+  // Actions
   async function addRent(data) {
     setBusy(true)
+
     try {
       await createRent(data)
       setOpen(false)
       await load()
-    } catch (err) {
-      console.error('createRent failed', err)
-      alert(err?.message || 'Failed to create rent')
+    } catch (error) {
+      console.error('createRent failed', error)
+      alert(error?.message || 'Failed to create rent')
     } finally {
       setBusy(false)
     }
@@ -56,68 +57,98 @@ export default function RentList() {
 
   async function markPaid(id) {
     if (!confirm('Mark this rent as paid?')) return
+
     setBusy(true)
+
     try {
       await payRent(id)
       await load()
-    } catch (err) {
-      console.error('payRent failed', err)
-      alert(err?.message || 'Failed to mark paid')
+    } catch (error) {
+      console.error('payRent failed', error)
+      alert(error?.message || 'Failed to mark paid')
     } finally {
       setBusy(false)
     }
   }
 
+  // Helpers
   function tenantName(id) {
-    // robust lookup for id or _id and number/string mismatch
     if (!id) return 'Unknown'
+
     const idStr = String(id)
-    const t = tenants.find(x => String(x.id ?? x._id) === idStr)
-    return t ? t.full_name : 'Unknown'
+    const tenant = tenants.find(
+      t => String(t.id ?? t._id) === idStr
+    )
+
+    return tenant ? tenant.full_name : 'Unknown'
   }
 
+  // UI
   return (
     <div>
+      {/* Header */}
       <div className="flex justify-between mb-4">
         <h2 className="text-xl font-bold">Rent Management</h2>
+
         <button
           className="bg-gradient-to-b from-[#F46A47] to-[#E85A3C] px-4 py-2 rounded"
-          onClick={() => { setEditing(null); setOpen(true) }}
+          onClick={() => {
+            // setEditing(null)
+            setOpen(true)
+          }}
           disabled={busy}
         >
           + Add Rent
         </button>
       </div>
 
+      {/* Pending rents */}
       <div className="space-y-4">
         {loading ? (
           <div className="text-gray-400">Loading pending rents...</div>
         ) : pending.length === 0 ? (
           <div className="text-gray-400">No pending rents</div>
         ) : (
-          pending.map(r => (
-            <Card key={r.id ?? r._id} className="p-4 flex justify-between items-center">
+          pending.map(rent => (
+            <Card
+              key={rent.id ?? rent._id}
+              className="p-4 flex justify-between items-center"
+            >
               <div>
-                <div className="font-semibold">{tenantName(r.tenant_id)}</div>
-                <div className="text-gray-400 text-sm">₹{r.amount}</div>
-                <div className="text-gray-400 text-sm">Due: {r.due_date ? dayjs(r.due_date).format('DD MMM YYYY') : 'N/A'}</div>
+                <div className="font-semibold">
+                  {tenantName(rent.tenant_id)}
+                </div>
+
+                <div className="text-gray-400 text-sm">
+                  ₹{rent.amount}
+                </div>
+
+                <div className="text-gray-400 text-sm">
+                  Due:{' '}
+                  {rent.due_date
+                    ? dayjs(rent.due_date).format('DD MMM YYYY')
+                    : 'N/A'}
+                </div>
               </div>
 
-              <div className="flex gap-2">
-                <button
-                  className="px-3 py-1 bg-green-600 text-white rounded"
-                  onClick={() => markPaid(r.id ?? r._id)}
-                  disabled={busy}
-                >
-                  Mark Paid
-                </button>
-              </div>
+              <button
+                className="px-3 py-1 bg-green-600 text-white rounded"
+                onClick={() => markPaid(rent.id ?? rent._id)}
+                disabled={busy}
+              >
+                Mark Paid
+              </button>
             </Card>
           ))
         )}
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Add Rent">
+      {/* Add rent modal */}
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Add Rent"
+      >
         <RentForm
           initialValues={null}
           tenants={tenants}

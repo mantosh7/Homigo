@@ -31,7 +31,8 @@ export default function TenantDashboard() {
 
   const pendingRent = rent.find(r => r.status === 'Pending') || null;
   const pendingcomplaint = complaint.find(c => c.status === 'Pending') || null;
-  const latestFiveRents = rent.slice(0, 5) ||  null;
+  const latestFiveRents = rent.slice(0, 3) || null;
+  const latestFiveComplaints = complaint.slice(0, 3) || null;
 
   return (
     <div className="space-y-6">
@@ -100,7 +101,31 @@ export default function TenantDashboard() {
 
         <Card className="p-6">
           <h3 className="font-semibold mb-2">My Complaints</h3>
-          <div className="text-gray-400">No complaints yet</div>
+          {latestFiveComplaints.length === 0 ? (
+            <p className="text-gray-400">No complaints raised yet.</p>
+          ) : (
+            latestFiveComplaints.map((c) => (
+              <div key={c.id} className="border-b py-3">
+                <div className="flex justify-between">
+                  <p className="font-medium">{c.title}</p>
+                  <span
+                    className={`text-sm ${c.status === "Resolved"
+                        ? "text-green-400"
+                        : "text-red-400"
+                      }`}
+                  >
+                    {c.status}
+                  </span>
+                </div>
+
+                <p className="text-sm text-gray-400">{c.description}</p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Priority: {c.priority}
+                </p>
+              </div>
+            ))
+          )}
         </Card>
       </div>
 
