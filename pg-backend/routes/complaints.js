@@ -20,14 +20,14 @@ router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
   try {
     const id = req.params.id;
     const { status } = req.body;
-    await pool.query('UPDATE complaints SET status = ?, updated_at = NOW() WHERE id = ?', [status, id]);
+    await pool.query('UPDATE complaints SET status = ? WHERE id = ?', [status, id]);
     res.json({ ok: true });
   } catch (err) { next(err) }
 });
 
 router.get('/all', requireAuth('admin'), async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM complaints ORDER BY created_at DESC');
+    const [rows] = await pool.query('SELECT * FROM complaints WHERE status = ? ORDER BY created_at DESC',['Pending']);
     res.json(rows);
   } catch (err) { next(err) }
 });

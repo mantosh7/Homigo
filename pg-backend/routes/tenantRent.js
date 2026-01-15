@@ -11,17 +11,16 @@ router.get('/rent', tenantAuth, async (req, res, next) => {
 
     const [rows] = await pool.query(
       `SELECT 
-         month,
-         year,
-         amount,
-         due_date,
-         status
-       FROM rent_records
-       WHERE tenant_id = ?
-       ORDER BY year DESC, month DESC`,
+      amount,
+      due_date,
+      status,
+      date_paid
+      FROM rent_records
+      WHERE tenant_id = ?
+      ORDER BY date_paid DESC`,
       [tenantId]
     );
-
+    console.log(rows[0]) ;
     res.json(rows);
   } catch (err) {
     next(err);

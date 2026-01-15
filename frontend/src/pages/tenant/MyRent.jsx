@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Card from '../../components/ui/Card'
 import { getMyRent } from '../../services/tenantRentService'
+
 
 export default function MyRent() {
     const [rent, setRent] = useState([])
@@ -20,7 +21,9 @@ export default function MyRent() {
         fetchRent()
     }, [])
 
-    const current = rent.length > 0 ? rent[0] : null
+    const current = useMemo(()=>{
+        return rent.find(r=>r.status==='Pending') ;
+    },[rent])
 
     return (
         <div className="space-y-6">
@@ -50,8 +53,8 @@ export default function MyRent() {
                 <Card className="p-6">
                     <div className="text-sm text-gray-400">Status</div>
                     <div className={`text-3xl font-bold mt-4 ${current?.status === 'Paid'
-                            ? 'text-green-400'
-                            : 'text-red-400'
+                        ? 'text-green-400'
+                        : 'text-red-400'
                         }`}>
                         {current?.status || '—'}
                     </div>
@@ -72,24 +75,39 @@ export default function MyRent() {
                     <table className="w-full text-sm">
                         <thead className="text-gray-400 border-b border-white/10">
                             <tr>
-                                <th className="text-left py-2">Month</th>
-                                <th className="text-left py-2">Year</th>
                                 <th className="text-left py-2">Amount</th>
                                 <th className="text-left py-2">Status</th>
+                                <th className="text-left py-2">Due Date</th>
+                                <th className="text-left py-2">Paid Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             {rent.map((r, i) => (
                                 <tr key={i} className="border-b border-white/5">
-                                    <td className="py-2">{r.month}</td>
-                                    <td className="py-2">{r.year}</td>
                                     <td className="py-2">₹ {r.amount}</td>
                                     <td className={`py-2 ${r.status === 'Paid'
-                                            ? 'text-green-400'
-                                            : 'text-red-400'
+                                        ? 'text-green-400'
+                                        : 'text-red-400'
                                         }`}>
                                         {r.status}
                                     </td>
+                                    
+                                    <td className="py-2">{r.due_date ? new Date(r.due_date).toLocaleDateString('en-IN', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    })
+                                        : ''}
+                                    </td>
+
+                                    <td className="py-2">{r.date_paid ? new Date(r.date_paid).toLocaleDateString('en-IN', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    })
+                                        : '-'}
+                                    </td>
+
                                 </tr>
                             ))}
                         </tbody>
