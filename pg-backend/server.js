@@ -15,6 +15,7 @@ const errorHandler = require('./middleware/errorHandler');
 const tenantAuthRoutes = require("./routes/tenantAuth");
 const tenantRentRoutes = require('./routes/tenantRent');
 const tenantComplaintRoutes = require("./routes/tenantComplaint");
+const testEmailRoute = require("./routes/testEmail");
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 
@@ -35,6 +36,7 @@ app.use("/api/tenant/auth", tenantAuthRoutes);
 app.use("/api/tenant", tenantRentRoutes);
 app.use("/api/tenant/complaints", tenantComplaintRoutes);
 
+app.use("/api/test-email", testEmailRoute);
 
 app.use(errorHandler);
 

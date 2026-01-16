@@ -19,7 +19,13 @@ router.use(cookieParser());
 // ADMIN SIGNUP
 router.post("/admin/signup", async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, otpVerified } = req.body;
+
+    if (!otpVerified) {
+      return res.status(403).json({
+        message: "Please verify email using OTP before signup"
+      });
+    }
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password required" });

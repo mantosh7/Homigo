@@ -70,6 +70,15 @@ CREATE TABLE IF NOT EXISTS complaints (
   FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
 );
 
+-- OTP Table Admin
+CREATE TABLE admin_email_otps (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  otp VARCHAR(10) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_rents_status ON rents(status);
 CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);

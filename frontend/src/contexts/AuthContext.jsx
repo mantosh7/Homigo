@@ -32,8 +32,8 @@ export function AuthProvider({children}){
   }
 
   // admin signup functionality
-  async function signupAdmin(name, email, password){
-    const res = await api.post("/auth/admin/signup", {name, email, password}) ;
+  async function signupAdmin(name, email, password, otpVerified){
+    const res = await api.post("/auth/admin/signup", {name, email, password, otpVerified}) ;
     return res.data ;
   }
   
