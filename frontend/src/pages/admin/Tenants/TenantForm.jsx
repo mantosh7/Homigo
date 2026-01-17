@@ -16,7 +16,7 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
   useEffect(() => { 
     fetchRooms() }, 
   [])
-  
+
   useEffect(() => {
     if (initialValues) {
       setName(initialValues.full_name || '')
@@ -46,7 +46,14 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
 
     try {
       setSaving(true)
-      await onSubmit({ full_name, phone, email, address, room_id })
+      const payload = {full_name, phone, email, address}
+
+      // send room_id ONLY if user actually selected / changed it
+      if (room_id !== null && room_id !== '') {
+        payload.room_id = room_id
+      }
+
+      await onSubmit(payload)
     } finally {
       setSaving(false)
     }
