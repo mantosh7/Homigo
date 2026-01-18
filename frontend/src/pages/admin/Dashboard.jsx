@@ -29,13 +29,7 @@ export default function Dashboard(){
   },[])
 
   useEffect(()=>{
-    // fetch once on mount (when user navigates to Dashboard)
     fetchAll()
-
-    // no polling, no global event listeners — rely on navigation/mount to refresh
-    return () => {
-      // nothing to clean up
-    }
   },[fetchAll])
 
   const totalRooms = rooms.length
@@ -48,7 +42,7 @@ export default function Dashboard(){
     <div className="space-y-6">
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-6">
-          <div className="text-sm text-gray-400">Total Rooms</div>
+          <div className="text-sm text-gray-400">Total Seats</div>
           <div className="text-3xl font-bold mt-4">{loading? '...' : totalRooms}</div>
         </Card>
 

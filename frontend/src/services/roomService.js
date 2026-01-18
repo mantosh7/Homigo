@@ -27,3 +27,7 @@ export const deleteRoom = async (id) => {
     throw e
   }
 }
+
+export const getAvailableRooms = () =>
+  api.get('/rooms/available').then(r => r.data);
+

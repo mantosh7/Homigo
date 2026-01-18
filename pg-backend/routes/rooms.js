@@ -14,21 +14,39 @@ router.post('/add', requireAuth('admin'), async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+
 router.get('/all', requireAuth('admin'), async (req, res, next) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM rooms ORDER BY id DESC');
+    const [rows] = await pool.query(`
+      SELECT 
+        r.*,
+        COUNT(t.id) AS occupied_seats,
+        (r.capacity - COUNT(t.id)) AS available_seats
+      FROM rooms r
+      LEFT JOIN tenants t 
+        ON r.id = t.room_id 
+        AND t.is_active = 1
+      GROUP BY r.id
+      ORDER BY r.id DESC
+    `);
+
     res.json(rows);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
+
 
 router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
   try {
     const id = req.params.id;
-    const { room_number, room_type, capacity, floor, monthly_rent, is_occupied } = req.body;
+    const { room_number, room_type, capacity, floor, monthly_rent } = req.body;
+
     await pool.query(
-      'UPDATE rooms SET room_number=?, room_type=?, capacity=?, floor=?, monthly_rent=?, is_occupied=? WHERE id=?',
-      [room_number, room_type, capacity, floor, monthly_rent, is_occupied ? 1 : 0, id]
+      'UPDATE rooms SET room_number=?, room_type=?, capacity=?, floor=?, monthly_rent=? WHERE id=?',
+      [room_number, room_type, capacity, floor, monthly_rent, id]
     );
+
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
@@ -49,6 +67,33 @@ router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
 
     await pool.query('DELETE FROM rooms WHERE id = ?', [roomId]);
     return res.json({ message: 'Room deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+// Get only rooms with available seats (for tenant allotment)
+router.get('/available', requireAuth('admin'), async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        r.id,
+        r.room_number,
+        r.room_type,
+        r.capacity,
+        COUNT(t.id) AS occupied_seats,
+        (r.capacity - COUNT(t.id)) AS available_seats
+      FROM rooms r
+      LEFT JOIN tenants t
+        ON r.id = t.room_id
+        AND t.is_active = 1
+      GROUP BY r.id
+      HAVING available_seats > 0
+      ORDER BY r.room_number
+    `);
+
+    res.json(rows);
   } catch (err) {
     next(err);
   }

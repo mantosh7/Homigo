@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Input from '../../../components/ui/Input'
 import Select from '../../../components/ui/Select'
-import { getRooms } from '../../../services/roomService'
+import { getAvailableRooms } from '../../../services/roomService'
 
 export default function TenantForm({ onSubmit, initialValues = null }) {
   const [full_name, setName] = useState('')
@@ -29,7 +29,7 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
 
   async function fetchRooms() {
     try {
-      const r = await getRooms()
+      const r = await getAvailableRooms()
       setRooms(r || [])
     } catch (e) {
       console.error(e)
