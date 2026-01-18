@@ -171,4 +171,66 @@ router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
   }
 })
 
+
+// GET TENANT PROFILE DETAILS
+router.get('/profile', requireAuth('tenant'), async (req, res, next) => {
+  try {
+    const tenantId = req.user.id;
+
+    const [rows] = await pool.query(`
+      SELECT 
+        t.full_name,
+        t.email,
+        t.permanent_address AS address,
+        r.room_number,
+        r.room_type
+      FROM tenants t
+      LEFT JOIN rooms r ON t.room_id = r.id
+      WHERE t.id = ?
+    `, [tenantId]);
+
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+// TENANT PASSWORD CHANGE
+router.post('/change-password', requireAuth('tenant'), async (req, res, next) => {
+  try {
+    const tenantId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Missing fields' });
+    }
+
+    const [rows] = await pool.query(
+      'SELECT password_hash FROM tenants WHERE id = ?',
+      [tenantId]
+    );
+
+    if (!rows.length || !rows[0].password_hash) {
+      return res.status(400).json({ message: 'Password not found for tenant' });
+    }
+
+    const match = await bcrypt.compare(oldPassword, rows[0].password_hash);
+    if (!match) {
+      return res.status(400).json({ message: 'Old password is incorrect' });
+    }
+
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      'UPDATE tenants SET password_hash = ? WHERE id = ?',
+      [hashed, tenantId]
+    );
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router

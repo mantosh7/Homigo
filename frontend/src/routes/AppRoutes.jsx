@@ -16,6 +16,7 @@ import Complaints from '@/pages/tenant/complaints'
 
 
 import Landing from '../pages/Landing'
+import Profile from '@/pages/tenant/Profile'
 
 function RequireAdmin({children}){
   const { user, loading } = useAuth()
@@ -55,6 +56,7 @@ export default function AppRoutes(){
         <Route path="dashboard" element={<TenantDashboard/>} />
         <Route path="rent" element={<MyRent/>} />
         <Route path="complaints" element={<Complaints />} />
+        <Route path="profile" element={<Profile />} />
 
       </Route>
 

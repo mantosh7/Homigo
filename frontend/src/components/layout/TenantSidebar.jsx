@@ -54,6 +54,8 @@ export default function TenantSidebar() {
                     <LinkItem to="/tenant/dashboard">Dashboard</LinkItem>
                     <LinkItem to="/tenant/rent">My Rent</LinkItem>
                     <LinkItem to="/tenant/complaints">Complaints</LinkItem>
+                    <LinkItem to="/tenant/profile">Profile</LinkItem>
+
                 </nav>
             </div>
 
