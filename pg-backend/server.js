@@ -10,6 +10,7 @@ const roomsRoutes = require('./routes/rooms');
 const tenantsRoutes = require('./routes/tenants');
 const rentRoutes = require('./routes/rent');
 const complaintsRoutes = require('./routes/complaints');
+const  adminAnalyticsRoutes = require("./routes/adminAnalytics")
 const errorHandler = require('./middleware/errorHandler');
 
 const tenantAuthRoutes = require("./routes/tenantAuth");
@@ -32,6 +33,7 @@ app.use('/api/rooms', roomsRoutes);
 app.use('/api/tenants', tenantsRoutes);  // admin ka control + tenant section(profile fetch & password change)
 app.use('/api/rent', rentRoutes);
 app.use('/api/complaints', complaintsRoutes);
+app.use("/api/analytics", adminAnalyticsRoutes) ; 
 
 // tenant section control
 app.use("/api/tenant/auth", tenantAuthRoutes);

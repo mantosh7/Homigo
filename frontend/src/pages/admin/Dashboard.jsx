@@ -32,9 +32,12 @@ export default function Dashboard(){
     fetchAll()
   },[fetchAll])
 
-  const totalRooms = rooms.length
+  const totalSeats = rooms.reduce((sum, room)=>{
+    return sum + room.capacity ;
+  }, 0) ;
+
   const occupied = rooms.filter(r => r.is_occupied === 1 || r.is_occupied === true || r.is_occupied === '1').length
-  const vacant = totalRooms - occupied
+  const vacant = totalSeats - occupied
   const totalTenants = tenants.length
   const pendingComplaints = complaints.filter(c => c.status !== 'Resolved').length
 
@@ -43,7 +46,7 @@ export default function Dashboard(){
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-6">
           <div className="text-sm text-gray-400">Total Seats</div>
-          <div className="text-3xl font-bold mt-4">{loading? '...' : totalRooms}</div>
+          <div className="text-3xl font-bold mt-4">{loading? '...' : totalSeats}</div>
         </Card>
 
         <Card className="p-6">
