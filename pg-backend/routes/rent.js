@@ -38,9 +38,9 @@ router.post('/create', requireAuth('admin'), async (req, res, next) => {
 
     const [r] = await pool.query(
       `INSERT INTO rent_records 
-       (tenant_id, month, year, amount, status, due_date) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [tenant_id, null, null, amount, 'Pending', due_date]
+       (tenant_id, amount, status, due_date) 
+       VALUES (?, ?, ?, ?)`,
+      [tenant_id, amount, 'Pending', due_date]
     );
 
     return res.json({ id: r.insertId });

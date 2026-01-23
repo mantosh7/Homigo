@@ -52,6 +52,7 @@ export default function Sidebar() {
           <LinkItem to="/admin/tenants">Tenants</LinkItem>
           <LinkItem to="/admin/rent">Rent</LinkItem>
           <LinkItem to="/admin/complaints">Complaints</LinkItem>
+          <LinkItem to="/admin/analytics">Analytics Dashboard</LinkItem>
         </nav>
       </div>
 
