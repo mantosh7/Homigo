@@ -6,6 +6,7 @@ const router = express.Router();
 router.post('/add', requireAuth('admin'), async (req, res, next) => {
   try {
     const { room_number, room_type, capacity, floor, monthly_rent } = req.body;
+    console.log(room_type) ;
     const [r] = await pool.query(
       'INSERT INTO rooms (room_number, room_type, capacity, floor, monthly_rent) VALUES (?, ?, ?, ?, ?)',
       [room_number, room_type, capacity, floor, monthly_rent]

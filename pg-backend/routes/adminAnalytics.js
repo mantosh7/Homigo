@@ -6,7 +6,7 @@ const router = express.Router();
 router.get("/summary", async (req, res) =>{
   try {
 
-    // Total Collected Amount
+    // Total Pending Amount
     const [pendingRows] = await pool.query(`
       SELECT 
       COALESCE(SUM(amount), 0) as totalPending
@@ -17,7 +17,7 @@ router.get("/summary", async (req, res) =>{
       `
     )
 
-    // Total Pending Amount
+    // Total Collected Amount
     const [paidRows] = await pool.query(`
       SELECT
       COALESCE(SUM(amount), 0) AS totalCollected
