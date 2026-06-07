@@ -10,6 +10,7 @@ const router = express.Router()
 // ADD TENANT (Admin)
 router.post('/add', requireAuth('admin'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId;
     const { full_name, phone, email, room_id, join_date, emergency_contact, permanent_address } = req.body
 
     //  Generate password
@@ -19,9 +20,9 @@ router.post('/add', requireAuth('admin'), async (req, res, next) => {
     // Insert tenant
     const [result] = await pool.query(
       `INSERT INTO tenants
-        (full_name, phone, email, password_hash, room_id, join_date, emergency_contact, permanent_address, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [full_name, phone, email, passwordHash, room_id || null, join_date || null, emergency_contact || null, permanent_address || null]
+        (pg_id, full_name, phone, email, password_hash, room_id, join_date, emergency_contact, permanent_address, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+      [pgId, full_name, phone, email, passwordHash, room_id || null, join_date || null, emergency_contact || null, permanent_address || null]
     )
 
     // Send password email
@@ -50,13 +51,16 @@ router.post('/add', requireAuth('admin'), async (req, res, next) => {
 // GET ALL ACTIVE TENANTS
 router.get('/all', requireAuth('admin'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId;
+
     const [rows] = await pool.query(`
       SELECT t.*, r.room_number
       FROM tenants t
       LEFT JOIN rooms r ON t.room_id = r.id
       WHERE t.is_active = 1
+      AND t.pg_id=?
       ORDER BY t.id DESC
-    `)
+    `, [pgId])
     res.json(rows)
   } catch (err) {
     next(err)
@@ -67,12 +71,13 @@ router.get('/all', requireAuth('admin'), async (req, res, next) => {
 // DELETE TENANT (Move Out)
 router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId;
     const tenantId = req.params.id
 
     //  Get tenant room
     const [rows] = await pool.query(
-      'SELECT room_id FROM tenants WHERE id = ?',
-      [tenantId]
+      'SELECT room_id FROM tenants WHERE id=? AND pg_id=?',
+      [tenantId, pgId]
     )
 
     if (!rows.length) {
@@ -82,13 +87,13 @@ router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
     const roomId = rows[0].room_id
 
     // Delete tenant
-    await pool.query('DELETE FROM tenants WHERE id = ?', [tenantId])
+    await pool.query('DELETE FROM tenants WHERE id=? AND pg_id=?', [tenantId, pgId])
 
     // Free room
     if (roomId) {
       await pool.query(
-        'UPDATE rooms SET is_occupied = 0 WHERE id = ?',
-        [roomId]
+        'UPDATE rooms SET is_occupied = 0 WHERE id=? AND pg_id=?',
+        [roomId, pgId]
       )
     }
 
@@ -103,13 +108,14 @@ router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
 // UPDATE TENANT
 router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId;
     const tenantId = req.params.id
     const { full_name, phone, email, password, room_id, join_date, emergency_contact, permanent_address, is_active } = req.body
 
     // Get previous room
     const [rows] = await pool.query(
-      'SELECT room_id FROM tenants WHERE id = ?',
-      [tenantId]
+      'SELECT room_id FROM tenants WHERE id=? AND pg_id=?',
+      [tenantId, pgId]
     )
 
     if (!rows.length) {
@@ -143,8 +149,8 @@ router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
 
     if (fields.length) {
       await pool.query(
-        `UPDATE tenants SET ${fields.join(', ')} WHERE id = ?`,
-        [...values, tenantId]
+        `UPDATE tenants SET ${fields.join(', ')} WHERE id=? AND pg_id=?`,
+        [...values, tenantId, pgId]
       )
     }
 
@@ -152,14 +158,14 @@ router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
     if (room_id !== undefined && prevRoomId !== room_id) {
       if (prevRoomId) {
         await pool.query(
-          'UPDATE rooms SET is_occupied = 0 WHERE id = ?',
-          [prevRoomId]
+          'UPDATE rooms SET is_occupied = 0 WHERE id=? AND pg_id=?',
+          [prevRoomId, pgId]
         )
       }
       if (room_id) {
         await pool.query(
-          'UPDATE rooms SET is_occupied = 1 WHERE id = ?',
-          [room_id]
+          'UPDATE rooms SET is_occupied = 1 WHERE id=? AND pg_id=?',
+          [room_id, pgId]
         )
       }
     }
@@ -175,6 +181,7 @@ router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
 // GET TENANT PROFILE DETAILS
 router.get('/profile', requireAuth('tenant'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId ;
     const tenantId = req.user.id;
 
     const [rows] = await pool.query(`
@@ -186,8 +193,8 @@ router.get('/profile', requireAuth('tenant'), async (req, res, next) => {
         r.room_type
       FROM tenants t
       LEFT JOIN rooms r ON t.room_id = r.id
-      WHERE t.id = ?
-    `, [tenantId]);
+      WHERE t.id=? AND pg_id=?
+    `, [tenantId, pgId]);
 
     res.json(rows[0]);
   } catch (err) {
@@ -199,6 +206,7 @@ router.get('/profile', requireAuth('tenant'), async (req, res, next) => {
 // TENANT PASSWORD CHANGE
 router.post('/change-password', requireAuth('tenant'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId;
     const tenantId = req.user.id;
     const { oldPassword, newPassword } = req.body;
 
@@ -207,8 +215,8 @@ router.post('/change-password', requireAuth('tenant'), async (req, res, next) =>
     }
 
     const [rows] = await pool.query(
-      'SELECT password_hash FROM tenants WHERE id = ?',
-      [tenantId]
+      'SELECT password_hash FROM tenants WHERE id = ? AND pg_id=?',
+      [tenantId, pgId]
     );
 
     if (!rows.length || !rows[0].password_hash) {
@@ -223,8 +231,8 @@ router.post('/change-password', requireAuth('tenant'), async (req, res, next) =>
 
     const hashed = await bcrypt.hash(newPassword, 10);
     await pool.query(
-      'UPDATE tenants SET password_hash = ? WHERE id = ?',
-      [hashed, tenantId]
+      'UPDATE tenants SET password_hash = ? WHERE id = ? AND pg_id=?',
+      [hashed, tenantId, pgId]
     );
 
     res.json({ message: 'Password updated successfully' });

@@ -6,10 +6,12 @@ const router = express.Router();
 router.post('/add', requireAuth('admin'), async (req, res, next) => {
   try {
     const { room_number, room_type, capacity, floor, monthly_rent } = req.body;
-    console.log(room_type) ;
+    console.log(room_type);
+    const pgId = req.user.pgId;
+
     const [r] = await pool.query(
-      'INSERT INTO rooms (room_number, room_type, capacity, floor, monthly_rent) VALUES (?, ?, ?, ?, ?)',
-      [room_number, room_type, capacity, floor, monthly_rent]
+      'INSERT INTO rooms (pg_id, room_number, room_type, capacity, floor, monthly_rent) VALUES (?, ?, ?, ?, ?, ?)',
+      [pgId, room_number, room_type, capacity, floor, monthly_rent]
     );
     res.json({ id: r.insertId });
   } catch (err) { next(err); }
@@ -18,6 +20,8 @@ router.post('/add', requireAuth('admin'), async (req, res, next) => {
 
 router.get('/all', requireAuth('admin'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId;
+
     const [rows] = await pool.query(`
       SELECT 
         r.*,
@@ -27,9 +31,10 @@ router.get('/all', requireAuth('admin'), async (req, res, next) => {
       LEFT JOIN tenants t 
         ON r.id = t.room_id 
         AND t.is_active = 1
+      WHERE r.pg_id = ?
       GROUP BY r.id
       ORDER BY r.id DESC
-    `);
+    `, [pgId]);
 
     res.json(rows);
   } catch (err) {
@@ -40,12 +45,13 @@ router.get('/all', requireAuth('admin'), async (req, res, next) => {
 
 router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId;
     const id = req.params.id;
     const { room_number, room_type, capacity, floor, monthly_rent } = req.body;
 
     await pool.query(
-      'UPDATE rooms SET room_number=?, room_type=?, capacity=?, floor=?, monthly_rent=? WHERE id=?',
-      [room_number, room_type, capacity, floor, monthly_rent, id]
+      'UPDATE rooms SET room_number=?, room_type=?, capacity=?, floor=?, monthly_rent=? WHERE id=? AND pg_id=?',
+      [room_number, room_type, capacity, floor, monthly_rent, id, pgId]
     );
 
     res.json({ ok: true });
@@ -54,19 +60,23 @@ router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
 
 
 router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
-  const roomId = req.params.id;
   try {
+    const pgId = req.user.pgId;
+    const roomId = req.params.id;
+
     const [rows] = await pool.query(
-      'SELECT COUNT(*) AS cnt FROM tenants WHERE room_id = ?',
-      [roomId]
+      'SELECT COUNT(*) AS cnt FROM tenants WHERE room_id = ? AND pg_id=?',
+      [roomId, pgId]
     );
+
     if (rows[0].cnt > 0) {
       return res.status(400).json({
         message: 'Cannot delete room: tenants are assigned to this room. Move out or unassign tenants first.'
       });
     }
 
-    await pool.query('DELETE FROM rooms WHERE id = ?', [roomId]);
+    await pool.query('DELETE FROM rooms WHERE id=? AND pg_id=?', [roomId, pgId]);
+
     return res.json({ message: 'Room deleted successfully' });
   } catch (err) {
     next(err);
@@ -77,6 +87,7 @@ router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
 // Get only rooms with available seats (for tenant allotment)
 router.get('/available', requireAuth('admin'), async (req, res, next) => {
   try {
+    const pgId = req.user.pgId;
     const [rows] = await pool.query(`
       SELECT 
         r.id,
@@ -89,10 +100,11 @@ router.get('/available', requireAuth('admin'), async (req, res, next) => {
       LEFT JOIN tenants t
         ON r.id = t.room_id
         AND t.is_active = 1
+      WHERE r.pg_id = ?
       GROUP BY r.id
       HAVING available_seats > 0
       ORDER BY r.room_number
-    `);
+    `, [pgId]);
 
     res.json(rows);
   } catch (err) {

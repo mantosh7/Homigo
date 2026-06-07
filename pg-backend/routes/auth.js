@@ -19,7 +19,7 @@ router.use(cookieParser());
 // ADMIN SIGNUP
 router.post("/admin/signup", async (req, res, next) => {
   try {
-    const { name, email, password, otpVerified } = req.body;
+    const { pgName, pgAddress, name, email, password, otpVerified } = req.body;
 
     if (!otpVerified) {
       return res.status(403).json({
@@ -38,14 +38,23 @@ router.post("/admin/signup", async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create PG first
+    const [pgResult] = await pool.query(
+      "INSERT INTO pgs (name, address) VALUES (?, ?)",
+      [pgName, pgAddress || null]
+    );
+
+    const pgId = pgResult.insertId;
+
+    // Create Admin
     const [result] = await pool.query(
-      "INSERT INTO admins (name, email, password_hash) VALUES (?, ?, ?)",
-      [name || null, email, hashedPassword]
+      "INSERT INTO admins (pg_id, name, email, password_hash) VALUES (?, ?, ?, ?)",
+      [pgId, name || null, email, hashedPassword]
     );
 
     return res.status(201).json({
       message: "Signup successful",
-      user: { id: result.insertId, name, email },
+      user: { id: result.insertId, pgId, name, email },
     });
 
   } catch (error) {
@@ -55,17 +64,20 @@ router.post("/admin/signup", async (req, res, next) => {
 });
 
 
-// ADMIN LOGIN (unchanged)
+// ADMIN LOGIN
 router.post('/admin/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const [rows] = await pool.query('SELECT id, name, email, password_hash FROM admins WHERE email = ?', [email]);
+
+    const [rows] = await pool.query('SELECT id, pg_id, name, email, password_hash FROM admins WHERE email = ?', [email]);
+
     const admin = rows[0];
     if (!admin) return res.status(401).json({ message: 'Invalid credentials' });
+
     const ok = await bcrypt.compare(password, admin.password_hash);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const payload = { id: admin.id, role: 'admin', email: admin.email, name: admin.name };
+    const payload = { id: admin.id, pgId: admin.pg_id, role: 'admin', email: admin.email, name: admin.name };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });
 
     res.cookie('token', token, {

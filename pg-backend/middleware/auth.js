@@ -12,8 +12,10 @@ function requireAuth(role = null){
     try {
       const token = getTokenFromCookie(req);
       if (!token) return res.status(401).json({ message: 'Unauthorized' });
+
       const payload = jwt.verify(token, JWT_SECRET);
       if (role && payload.role !== role) return res.status(403).json({ message: 'Forbidden' });
+      
       req.user = payload;
       next();
     } catch (err) {

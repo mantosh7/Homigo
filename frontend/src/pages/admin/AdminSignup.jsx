@@ -4,7 +4,9 @@ import useAuth from '../../hooks/useAuth'
 import HomeButton from '@/components/ui/HomeButton'
 import api from '@/services/api'
 
-export default function AdminSignup(){
+export default function AdminSignup() {
+  const [pgName, setPgName] = useState('')
+  const [pgAddress, setPgAddress] = useState('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -21,61 +23,61 @@ export default function AdminSignup(){
   const { signupAdmin } = useAuth()
 
   // send OTP
-  async function sendOtp(){
-    if(!email){
+  async function sendOtp() {
+    if (!email) {
       alert('Please enter email first')
       return
     }
 
     setOtpLoading(true)
-    try{
+    try {
       await api.post('/test-email/send', { email })
       setOtpSent(true)
       alert('OTP sent to your email')
-    }catch(err){
+    } catch (err) {
       alert('Failed to send OTP')
     }
     setOtpLoading(false)
   }
 
   // verify OTP
-  async function verifyOtp(){
-    if(!otp){
+  async function verifyOtp() {
+    if (!otp) {
       alert('Please enter OTP')
       return
     }
 
     setOtpLoading(true)
-    try{
+    try {
       await api.post('/test-email/verify', { email, otp })
       setOtpVerified(true)
       alert('OTP verified successfully')
-    }catch(err){
+    } catch (err) {
       alert(err?.response?.data?.message || 'OTP verification failed')
     }
     setOtpLoading(false)
   }
 
   // submit handler
-  async function submit(e){ 
+  async function submit(e) {
     e.preventDefault()
 
-    if(!otpVerified){
+    if (!otpVerified) {
       alert('Please verify OTP first')
       return
     }
 
-    if(password !== confirmPassword){
+    if (password !== confirmPassword) {
       alert('Passwords do not match')
       return
     }
-    
+
     setLoading(true)
-    try{
-      await signupAdmin(name, email, password, true)
+    try {
+      await signupAdmin(pgName, pgAddress, name, email, password, true)
       alert("Signup successful!")
       nav('/admin/login')
-    }catch(err){ 
+    } catch (err) {
       alert('Signup failed: ' + (err.message || 'Please try again'))
     }
     setLoading(false)
@@ -87,25 +89,46 @@ export default function AdminSignup(){
       <div className="w-full max-w-md panel p-8 bg-slate-800 rounded-lg">
         <h2 className="text-2xl font-bold mb-2 text-white">Admin Signup</h2>
         <p className="text-sm text-slate-400 mb-6">Create your admin account</p>
-        
+
         <form onSubmit={submit} className="space-y-4">
           <label className="block text-sm text-white">
+            PG Name
+            <input
+              value={pgName}
+              onChange={e => setPgName(e.target.value)}
+              className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
+              placeholder="Homigo Boys PG"
+              required
+            />
+          </label>
+
+          <label className="block text-sm text-white">
+            PG Address
+            <input
+              value={pgAddress}
+              onChange={e => setPgAddress(e.target.value)}
+              className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
+              placeholder="Sector 62, Noida"
+            />
+          </label>
+
+          <label className="block text-sm text-white">
             Name
-            <input 
-              value={name} 
-              onChange={e=>setName(e.target.value)} 
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
               className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
               placeholder="John Doe"
               required
             />
           </label>
-          
+
           <label className="block text-sm text-white">
             Email
-            <input 
+            <input
               type="email"
-              value={email} 
-              onChange={e=>setEmail(e.target.value)} 
+              value={email}
+              onChange={e => setEmail(e.target.value)}
               className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
               placeholder="admin@pg.local"
               required
@@ -130,7 +153,7 @@ export default function AdminSignup(){
             <div className="space-y-2">
               <input
                 value={otp}
-                onChange={e=>setOtp(e.target.value)}
+                onChange={e => setOtp(e.target.value)}
                 placeholder="Enter OTP"
                 className="w-full p-3 rounded bg-transparent border border-gray-700 text-white"
               />
@@ -151,33 +174,33 @@ export default function AdminSignup(){
               ✅ OTP Verified
             </div>
           )}
-          
+
           <label className="block text-sm text-white">
             Password
-            <input 
-              type="password" 
-              value={password} 
-              onChange={e=>setPassword(e.target.value)} 
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
               placeholder="••••••••"
               required
             />
           </label>
-          
+
           <label className="block text-sm text-white">
             Confirm Password
-            <input 
-              type="password" 
-              value={confirmPassword} 
-              onChange={e=>setConfirmPassword(e.target.value)} 
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
               className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
               placeholder="••••••••"
               required
             />
           </label>
-          
+
           <div>
-            <button 
+            <button
               type="submit"
               disabled={loading || !otpVerified}
               className={`w-full py-3 rounded font-semibold transition-all
@@ -190,11 +213,11 @@ export default function AdminSignup(){
             </button>
           </div>
         </form>
-        
+
         <div className="mt-6 text-center">
           <p className="text-sm text-slate-400">
             Already have an account?{' '}
-            <button 
+            <button
               onClick={() => nav('/admin/login')}
               className="text-[#ff6b4a] hover:text-[#ff8a6b] font-semibold"
             >
