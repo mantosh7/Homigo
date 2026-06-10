@@ -1,6 +1,6 @@
 const express = require('express')
 const pool = require('../db')
-const { requireAuth } = require('../middleware/auth')
+const { adminAuth } = require('../middleware/auth')
 const bcrypt = require('bcrypt')
 const generatePassword = require('../utils/password')
 const transporter = require('../utils/email')
@@ -8,7 +8,7 @@ const transporter = require('../utils/email')
 const router = express.Router()
 
 // ADD TENANT (Admin)
-router.post('/add', requireAuth('admin'), async (req, res, next) => {
+router.post('/add', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const { full_name, phone, email, room_id, join_date, emergency_contact, permanent_address } = req.body
@@ -49,7 +49,7 @@ router.post('/add', requireAuth('admin'), async (req, res, next) => {
 })
 
 // GET ALL ACTIVE TENANTS
-router.get('/all', requireAuth('admin'), async (req, res, next) => {
+router.get('/all', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
 
@@ -69,7 +69,7 @@ router.get('/all', requireAuth('admin'), async (req, res, next) => {
 
 
 // DELETE TENANT (Move Out)
-router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
+router.delete('/delete/:id', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const tenantId = req.params.id
@@ -106,7 +106,7 @@ router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
 
 
 // UPDATE TENANT
-router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
+router.put('/update/:id', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const tenantId = req.params.id
@@ -177,68 +177,5 @@ router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
   }
 })
 
-
-// GET TENANT PROFILE DETAILS
-router.get('/profile', requireAuth('tenant'), async (req, res, next) => {
-  try {
-    const pgId = req.user.pgId ;
-    const tenantId = req.user.id;
-
-    const [rows] = await pool.query(`
-      SELECT 
-        t.full_name,
-        t.email,
-        t.permanent_address AS address,
-        r.room_number,
-        r.room_type
-      FROM tenants t
-      LEFT JOIN rooms r ON t.room_id = r.id
-      WHERE t.id=? AND pg_id=?
-    `, [tenantId, pgId]);
-
-    res.json(rows[0]);
-  } catch (err) {
-    next(err);
-  }
-});
-
-
-// TENANT PASSWORD CHANGE
-router.post('/change-password', requireAuth('tenant'), async (req, res, next) => {
-  try {
-    const pgId = req.user.pgId;
-    const tenantId = req.user.id;
-    const { oldPassword, newPassword } = req.body;
-
-    if (!oldPassword || !newPassword) {
-      return res.status(400).json({ message: 'Missing fields' });
-    }
-
-    const [rows] = await pool.query(
-      'SELECT password_hash FROM tenants WHERE id = ? AND pg_id=?',
-      [tenantId, pgId]
-    );
-
-    if (!rows.length || !rows[0].password_hash) {
-      return res.status(400).json({ message: 'Password not found for tenant' });
-    }
-
-    const match = await bcrypt.compare(oldPassword, rows[0].password_hash);
-    if (!match) {
-      return res.status(400).json({ message: 'Old password is incorrect' });
-    }
-
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-    await pool.query(
-      'UPDATE tenants SET password_hash = ? WHERE id = ? AND pg_id=?',
-      [hashed, tenantId, pgId]
-    );
-
-    res.json({ message: 'Password updated successfully' });
-  } catch (err) {
-    next(err);
-  }
-});
 
 module.exports = router

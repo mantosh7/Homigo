@@ -15,7 +15,7 @@ export const updateTenant = (id, data) =>
 
 // used by tenant section
 export const getTenantProfile = () =>
-  api.get('/tenants/profile').then(r => r.data) ;
+  api.get('/tenant/profile').then(r => r.data) ;
 
 export const changeTenantPassword = (data) =>
-  api.post('/tenants/change-password', data).then(r => r.data) ;
+  api.post('/tenant/change-password', data).then(r => r.data) ;

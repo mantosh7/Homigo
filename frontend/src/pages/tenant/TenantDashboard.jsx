@@ -20,8 +20,8 @@ export default function TenantDashboard() {
     try {
       const data = await getMyComplaints();
       setcomplaint(data || []);
-    } catch (error) {
-      console.log("failed complaint fetch from tenant: ", error);
+    } catch (err) {
+      alert('Login failed: ' + (err.message || 'Please try again'))
     }
   }
   useEffect(() => {

@@ -18,7 +18,7 @@ router.post('/login', async (req, res, next) => {
     }
 
     const [rows] = await pool.query(
-      'SELECT id, full_name, email, password_hash, is_active FROM tenants WHERE email = ?',
+      'SELECT id, pg_id, full_name, email, password_hash, is_active FROM tenants WHERE email = ?',
       [email]
     );
 
@@ -35,6 +35,7 @@ router.post('/login', async (req, res, next) => {
 
     const payload = {
       id: tenant.id,
+      pgId: tenant.pg_id,
       role: 'tenant',
       email: tenant.email,
       full_name: tenant.full_name

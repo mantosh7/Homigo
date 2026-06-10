@@ -1,10 +1,10 @@
 const express = require('express');
 const pool = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { adminAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/pending', requireAuth('admin'), async (req, res, next) => {
+router.get('/pending', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const [rows] = await pool.query(
@@ -21,7 +21,7 @@ router.get('/pending', requireAuth('admin'), async (req, res, next) => {
 });
 
 
-router.post('/create', requireAuth('admin'), async (req, res, next) => {
+router.post('/create', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     let { tenant_id, amount, due_date } = req.body;
@@ -53,7 +53,7 @@ router.post('/create', requireAuth('admin'), async (req, res, next) => {
   }
 });
 
-router.put('/pay/:id', requireAuth('admin'), async (req, res, next) => {
+router.put('/pay/:id', adminAuth, async (req, res, next) => {
   const id = req.params.id;
   const pgId = req.user.pgId;
   const today = new Date();

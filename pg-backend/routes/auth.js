@@ -101,31 +101,6 @@ router.post('/admin/logout', (req, res) => {
   return res.json({ ok: true, message: 'Logged out' });
 });
 
-// TENANT LOGIN (unchanged)
-router.post('/tenant/login', async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    const [rows] = await pool.query('SELECT id, full_name, email, password_hash, is_active FROM tenants WHERE email = ?', [email]);
-    const t = rows[0];
-    if (!t || t.is_active === 0) return res.status(401).json({ message: 'Invalid credentials or inactive' });
-    const ok = await bcrypt.compare(password, t.password_hash);
-    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
-
-    const payload = { id: t.id, role: 'tenant', email: t.email, full_name: t.full_name };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: COOKIE_SECURE,
-      sameSite: 'lax',
-      maxAge: 8 * 3600 * 1000
-    });
-
-    res.json({ user: payload });
-  } catch (err) { next(err) }
-});
-
-
 
 // ME - read user from cookie (unchanged)
 router.get('/me', async (req, res) => {

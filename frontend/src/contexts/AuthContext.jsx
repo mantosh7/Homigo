@@ -45,7 +45,8 @@ export function AuthProvider({children}){
 
   // tenant login functionality
   async function loginTenant(email, password){
-    const res = await api.post('/auth/tenant/login', { email, password })
+    const res = await api.post('/tenant/auth/login', { email, password })
+    console.log(res.data);
     setUser(res.data.user)
     return res.data
   }
@@ -57,3 +58,5 @@ export function AuthProvider({children}){
     </AuthContext.Provider>
   )
 }
+
+export default AuthProvider

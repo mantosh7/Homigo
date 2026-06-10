@@ -1,12 +1,13 @@
 const express = require("express");
 const pool = require("../db");
-const { requireAuth } = require("../middleware/auth");
+const tenantAuth = require('../middleware/tenantAuth');
 
 const router = express.Router();
 
 // tenant complaint add
-router.post("/add", requireAuth("tenant"), async (req, res) => {
+router.post("/add", tenantAuth, async (req, res) => {
   try {
+    const pgId = req.user.pgId ;
     const tenantId = req.user.id;
     const { room_id, title, description, priority } = req.body;
 
@@ -16,9 +17,9 @@ router.post("/add", requireAuth("tenant"), async (req, res) => {
 
     await pool.query(
       `INSERT INTO complaints
-       (tenant_id, room_id, title, description, priority)
-       VALUES (?, ?, ?, ?, ?)`,
-      [tenantId, room_id || null, title, description, priority || "Normal"]
+       (pg_id, tenant_id, room_id, title, description, priority)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [pgId, tenantId, room_id || null, title, description, priority || "Normal"]
     );
 
     res.json({ message: "Complaint submitted successfully" });
@@ -29,16 +30,18 @@ router.post("/add", requireAuth("tenant"), async (req, res) => {
 });
 
 // tenant - view own complaints
-router.get("/", requireAuth("tenant"), async (req, res) => {
+router.get("/", tenantAuth, async (req, res) => {
   try {
+    const pgId = req.user.pgId ;
     const tenantId = req.user.id;
 
     const [rows] = await pool.query(
       `SELECT id, title, description, priority, status, created_at
        FROM complaints
        WHERE tenant_id = ?
+       AND pg_id = ?
        ORDER BY created_at DESC`,
-      [tenantId]
+      [tenantId, pgId]
     );
 
     res.json(rows);

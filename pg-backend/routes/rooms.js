@@ -1,12 +1,11 @@
 const express = require('express');
 const pool = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { adminAuth } = require('../middleware/auth');
 const router = express.Router();
 
-router.post('/add', requireAuth('admin'), async (req, res, next) => {
+router.post('/add', adminAuth, async (req, res, next) => {
   try {
     const { room_number, room_type, capacity, floor, monthly_rent } = req.body;
-    console.log(room_type);
     const pgId = req.user.pgId;
 
     const [r] = await pool.query(
@@ -18,7 +17,7 @@ router.post('/add', requireAuth('admin'), async (req, res, next) => {
 });
 
 
-router.get('/all', requireAuth('admin'), async (req, res, next) => {
+router.get('/all', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
 
@@ -43,7 +42,7 @@ router.get('/all', requireAuth('admin'), async (req, res, next) => {
 });
 
 
-router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
+router.put('/update/:id', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const id = req.params.id;
@@ -59,7 +58,7 @@ router.put('/update/:id', requireAuth('admin'), async (req, res, next) => {
 });
 
 
-router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
+router.delete('/delete/:id', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const roomId = req.params.id;
@@ -85,7 +84,7 @@ router.delete('/delete/:id', requireAuth('admin'), async (req, res, next) => {
 
 
 // Get only rooms with available seats (for tenant allotment)
-router.get('/available', requireAuth('admin'), async (req, res, next) => {
+router.get('/available', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const [rows] = await pool.query(`

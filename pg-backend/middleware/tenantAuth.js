@@ -17,7 +17,7 @@ module.exports = function tenantAuth(req, res, next) {
     }
 
     // attach tenant info
-    req.tenant = payload; // { id, role, email, full_name }
+    req.user = payload; // { id, pgId, role, email, full_name }
 
     next();
   } catch (err) {

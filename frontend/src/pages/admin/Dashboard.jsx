@@ -4,37 +4,37 @@ import { getRooms } from '../../services/roomService'
 import { getTenants } from '../../services/tenantService'
 import { getComplaints } from '../../services/complaintService'
 
-export default function Dashboard(){
+export default function Dashboard() {
   const [rooms, setRooms] = useState([])
   const [tenants, setTenants] = useState([])
   const [complaints, setComplaints] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetchAll = useCallback(async ()=>{
+  const fetchAll = useCallback(async () => {
     setLoading(true)
-    try{
+    try {
       const [r, t, c] = await Promise.all([
-        getRooms().catch(()=>[]),
-        getTenants().catch(()=>[]),
-        getComplaints().catch(()=>[])
+        getRooms().catch(() => []),
+        getTenants().catch(() => []),
+        getComplaints().catch(() => [])
       ])
       setRooms(r || [])
       setTenants(t || [])
       setComplaints(c || [])
-    }catch(e){
+    } catch (e) {
       console.error('Dashboard fetch error', e)
-    }finally{
+    } finally {
       setLoading(false)
     }
-  },[])
+  }, [])
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchAll()
-  },[fetchAll])
+  }, [fetchAll])
 
-  const totalSeats = rooms.reduce((sum, room)=>{
-    return sum + room.capacity ;
-  }, 0) ;
+  const totalSeats = rooms.reduce((sum, room) => {
+    return sum + room.capacity;
+  }, 0);
 
   const occupied = rooms.filter(r => r.is_occupied === 1 || r.is_occupied === true || r.is_occupied === '1').length
   const vacant = totalSeats - occupied
@@ -46,22 +46,22 @@ export default function Dashboard(){
       <div className="grid grid-cols-4 gap-4">
         <Card className="p-6">
           <div className="text-sm text-gray-400">Total Seats</div>
-          <div className="text-3xl font-bold mt-4">{loading? '...' : totalSeats}</div>
+          <div className="text-3xl font-bold mt-4">{loading ? '...' : totalSeats}</div>
         </Card>
 
         <Card className="p-6">
           <div className="text-sm text-gray-400">Occupied</div>
-          <div className="text-3xl font-bold mt-4">{loading? '...' : occupied}</div>
+          <div className="text-3xl font-bold mt-4">{loading ? '...' : occupied}</div>
         </Card>
 
         <Card className="p-6">
           <div className="text-sm text-gray-400">Vacant</div>
-          <div className="text-3xl font-bold mt-4">{loading? '...' : vacant}</div>
+          <div className="text-3xl font-bold mt-4">{loading ? '...' : vacant}</div>
         </Card>
 
         <Card className="p-6">
           <div className="text-sm text-gray-400">Active Tenants</div>
-          <div className="text-3xl font-bold mt-4">{loading? '...' : totalTenants}</div>
+          <div className="text-3xl font-bold mt-4">{loading ? '...' : totalTenants}</div>
         </Card>
       </div>
 
@@ -69,8 +69,8 @@ export default function Dashboard(){
         <Card className="p-6">
           <h3 className="font-semibold mb-2">Recent Tenants</h3>
           {loading && <div className="text-gray-400">Loading...</div>}
-          {!loading && tenants.length===0 && <div className="text-gray-400">No tenants yet</div>}
-          {!loading && tenants.slice(0,5).map(t=> (
+          {!loading && tenants.length === 0 && <div className="text-gray-400">No tenants yet</div>}
+          {!loading && tenants.slice(0, 5).map(t => (
             <div key={t.id} className="py-2 border-b border-white/3">{t.full_name || t.name || t.email}</div>
           ))}
         </Card>
@@ -78,9 +78,17 @@ export default function Dashboard(){
         <Card className="p-6">
           <h3 className="font-semibold mb-2">Recent Complaints</h3>
           {loading && <div className="text-gray-400">Loading...</div>}
-          {!loading && complaints.length===0 && <div className="text-gray-400">No complaints yet</div>}
-          {!loading && complaints.slice(0,5).map(c=> (
-            <div key={c.id} className="py-2 border-b border-white/3">{c.title || c.description}</div>
+          {!loading && complaints.length === 0 && <div className="text-gray-400">No complaints yet</div>}
+          {!loading && complaints.slice(0, 5).map(c => (
+            <div key={c.id} className="py-2 border-b border-white/3 flex justify-between items-center">
+              <span>{c.title || c.description}</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${c.priority === 'High' ? 'bg-red-500/20 text-red-400' :
+                  c.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-green-500/20 text-green-400'
+                }`}>
+                {c.priority || 'Low'}
+              </span>
+            </div>
           ))}
         </Card>
       </div>

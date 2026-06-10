@@ -1,10 +1,10 @@
 const express = require("express");
 const pool = require("../db");
-const { requireAuth } = require('../middleware/auth')
+const { adminAuth } = require('../middleware/auth')
 
 const router = express.Router();
 
-router.get("/summary", requireAuth("admin"), async (req, res) => {
+router.get("/summary", adminAuth, async (req, res) => {
   try {
 
     const pgId = req.user.pgId;
@@ -65,7 +65,7 @@ router.get("/summary", requireAuth("admin"), async (req, res) => {
 })
 
 // monthly trend
-router.get("/monthly-trend", requireAuth("admin"), async (req, res) => {
+router.get("/monthly-trend", adminAuth, async (req, res) => {
   try {
     const pgId = req.user.pgId;
 

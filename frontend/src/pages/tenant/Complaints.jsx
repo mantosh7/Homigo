@@ -13,6 +13,7 @@ const Complaints = () => {
   const loadComplaints = async () => {
     try {
       const data = await getMyComplaints();
+      console.log(data) ;
       setComplaints(data);
     } catch (err) {
       console.error(err);

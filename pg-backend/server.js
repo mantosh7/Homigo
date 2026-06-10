@@ -14,7 +14,7 @@ const  adminAnalyticsRoutes = require("./routes/adminAnalytics")
 const errorHandler = require('./middleware/errorHandler');
 
 const tenantAuthRoutes = require("./routes/tenantAuth");
-const tenantRentRoutes = require('./routes/tenantRent');
+const tenantCommonRoute = require('./routes/tenantCommonRoute');
 const tenantComplaintRoutes = require("./routes/tenantComplaint");
 const testEmailRoute = require("./routes/testEmail");
 
@@ -37,7 +37,7 @@ app.use("/api/analytics", adminAnalyticsRoutes) ;
 
 // tenant section control
 app.use("/api/tenant/auth", tenantAuthRoutes);
-app.use("/api/tenant", tenantRentRoutes);
+app.use("/api/tenant", tenantCommonRoute);
 app.use("/api/tenant/complaints", tenantComplaintRoutes);
 
 // email 
