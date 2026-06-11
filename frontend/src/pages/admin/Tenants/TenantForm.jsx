@@ -1,38 +1,34 @@
 import { useState, useEffect } from 'react'
 import Input from '../../../components/ui/Input'
 import Select from '../../../components/ui/Select'
-import { getAvailableRooms } from '../../../services/roomService'
+import { getAvailableRooms, getRooms } from '../../../services/roomService'
 
 export default function TenantForm({ onSubmit, initialValues = null }) {
-  const [full_name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [address, setAddress] = useState('')
-  const [room_id, setRoom] = useState(null)
-  const [rooms, setRooms] = useState([])
-  const [saving, setSaving] = useState(false)
+  const [full_name, setName]  = useState(initialValues?.full_name || '')
+  const [phone, setPhone]     = useState(initialValues?.phone     || '')
+  const [email, setEmail]     = useState(initialValues?.email     || '')
+  const [address, setAddress] = useState(initialValues?.permanent_address || '')
+  const [room_id, setRoom]    = useState(initialValues?.room_id   ?? null)
+  const [rooms, setRooms]     = useState([])
+  const [saving, setSaving]   = useState(false)
 
-
-  useEffect(() => { 
-    fetchRooms() }, 
-  [])
+  const isEditing = !!initialValues
 
   useEffect(() => {
-    if (initialValues) {
-      setName(initialValues.full_name || '')
-      setPhone(initialValues.phone || '')
-      setEmail(initialValues.email || '')
-      setAddress(initialValues.address || '')
-      setRoom(initialValues.room_id || null)
-    }
-  }, [initialValues])
+    fetchRooms()
+  }, [])
 
   async function fetchRooms() {
     try {
-      const r = await getAvailableRooms()
-      setRooms(r || [])
+      if (isEditing) {
+        const all = await getRooms()
+        setRooms(all || [])
+      } else {
+        const available = await getAvailableRooms()
+        setRooms(available || [])
+      }
     } catch (e) {
-      console.error(e)
+      console.error('Failed to fetch rooms', e)
     }
   }
 
@@ -44,11 +40,10 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
       return
     }
 
+    setSaving(true)
     try {
-      setSaving(true)
-      const payload = {full_name, phone, email, address}
+      const payload = { full_name, phone, email, permanent_address }
 
-      // send room_id ONLY if user actually selected / changed it
       if (room_id !== null && room_id !== '') {
         payload.room_id = room_id
       }
@@ -59,17 +54,33 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
     }
   }
 
-
   return (
     <form onSubmit={submit} className="space-y-4">
-      <Input label="Full Name" value={full_name} onChange={e => setName(e.target.value)} />
+
+      <Input
+        label="Full Name"
+        value={full_name}
+        onChange={e => setName(e.target.value)}
+      />
 
       <div className="grid grid-cols-2 gap-4">
-        <Input label="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
-        <Input label="Email" value={email} onChange={e => setEmail(e.target.value)} />
+        <Input
+          label="Phone"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+        />
+        <Input
+          label="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
       </div>
 
-      <Input label="Address" value={address} onChange={e => setAddress(e.target.value)} />
+      <Input
+        label="Address"
+        value={address}
+        onChange={e => setAddress(e.target.value)}
+      />
 
       <Select
         label="Assign Room"
@@ -82,7 +93,7 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
         <option value="">Select room</option>
         {rooms.map(r => (
           <option key={r.id} value={r.id}>
-            Room {r.room_number}
+            Room {r.room_number} - {r.room_type}
           </option>
         ))}
       </Select>
@@ -91,16 +102,16 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
         <button
           type="submit"
           disabled={saving}
-          className={`px-5 py-2 rounded text-white
+          className={`px-5 py-2 rounded-lg text-white text-sm font-medium transition
             ${saving
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-b from-[#F46A47] to-[#E85A3C]'
+              ? 'bg-gray-500 cursor-not-allowed'
+              : 'bg-gradient-to-b from-[#F46A47] to-[#E85A3C] hover:opacity-90'
             }`}
         >
-          {saving ? 'Saving...' : 'Save'}
+          {saving ? 'Saving...' : isEditing ? 'Update Tenant' : 'Add Tenant'}
         </button>
-
       </div>
+
     </form>
   )
 }

@@ -30,14 +30,14 @@ app.use(cors({
 // admin section 
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomsRoutes);
-app.use('/api/tenants', tenantsRoutes);  // admin ka control + tenant section(profile fetch & password change)
+app.use('/api/tenants', tenantsRoutes);  
 app.use('/api/rent', rentRoutes);
 app.use('/api/complaints', complaintsRoutes);
 app.use("/api/analytics", adminAnalyticsRoutes) ; 
 
 // tenant section control
 app.use("/api/tenant/auth", tenantAuthRoutes);
-app.use("/api/tenant", tenantCommonRoute);
+app.use("/api/tenant", tenantCommonRoute);   // rent records, password cahnge, profile fetch
 app.use("/api/tenant/complaints", tenantComplaintRoutes);
 
 // email 
