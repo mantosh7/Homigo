@@ -6,10 +6,10 @@
 //    <Card title="Total Collected" value="₹12,000" icon="↓" color="red" hint="This month" />
 
 const colors = {
-  green:  '#22c55e',
+  green: '#22c55e',
   yellow: '#f59e0b',
-  blue:   '#3b82f6',
-  red:    '#ef4444',
+  blue: '#3b82f6',
+  red: '#ef4444',
   indigo: '#6366f1',
 }
 

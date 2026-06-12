@@ -10,11 +10,11 @@ const fmt = (d) => d ? dayjs(d).format('MMM D, YYYY') : ''
 
 export default function TenantsList() {
 
-  const [tenants, setTenants]     = useState([])
-  const [rooms, setRooms]         = useState([])
-  const [open, setOpen]           = useState(false)
-  const [loading, setLoading]     = useState(true)
-  const [editing, setEditing]     = useState(null)  // null = add mode, object = edit mode
+  const [tenants, setTenants] = useState([])
+  const [rooms, setRooms] = useState([])
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(null)  // null = add mode, object = edit mode
   const [opLoading, setOpLoading] = useState(false) // for save/delete operations
 
   // load everything on mount
@@ -27,7 +27,7 @@ export default function TenantsList() {
     setLoading(true)
     try {
       const tenantsData = await getTenants()
-      const roomsData   = await getRooms()
+      const roomsData = await getRooms()
       setTenants(tenantsData || [])
       setRooms(roomsData || [])
     } catch (e) {
@@ -101,9 +101,9 @@ export default function TenantsList() {
   }
 
   // summary stats for the top cards
-  const totalTenants  = tenants.length
+  const totalTenants = tenants.length
   const occupiedRooms = new Set(tenants.map(t => t.room_id).filter(Boolean)).size
-  const unassigned    = tenants.filter(t => !t.room_id).length
+  const unassigned = tenants.filter(t => !t.room_id).length
 
   return (
     <div>
@@ -125,9 +125,9 @@ export default function TenantsList() {
 
       {/* ── Summary cards ── */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <Card title="Total Tenants"  value={totalTenants}  icon="👥" color="indigo" hint="Currently registered" />
-        <Card title="Rooms Occupied" value={occupiedRooms} icon="🏠" color="blue"   hint="Rooms with tenants" />
-        <Card title="Unassigned"     value={unassigned}    icon="!"  color="yellow" hint="No room assigned" />
+        <Card title="Total Tenants" value={totalTenants} icon="👥" color="indigo" hint="Currently registered" />
+        <Card title="Rooms Occupied" value={occupiedRooms} icon="🏠" color="blue" hint="Rooms with tenants" />
+        <Card title="Unassigned" value={unassigned} icon="!" color="yellow" hint="No room assigned" />
       </div>
 
       {/* ── Loading indicator ── */}

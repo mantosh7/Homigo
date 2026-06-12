@@ -4,13 +4,13 @@ import Select from '../../../components/ui/Select'
 import { getAvailableRooms, getRooms } from '../../../services/roomService'
 
 export default function TenantForm({ onSubmit, initialValues = null }) {
-  const [full_name, setName]  = useState(initialValues?.full_name || '')
-  const [phone, setPhone]     = useState(initialValues?.phone     || '')
-  const [email, setEmail]     = useState(initialValues?.email     || '')
+  const [full_name, setName] = useState(initialValues?.full_name || '')
+  const [phone, setPhone] = useState(initialValues?.phone || '')
+  const [email, setEmail] = useState(initialValues?.email || '')
   const [address, setAddress] = useState(initialValues?.permanent_address || '')
-  const [room_id, setRoom]    = useState(initialValues?.room_id   ?? null)
-  const [rooms, setRooms]     = useState([])
-  const [saving, setSaving]   = useState(false)
+  const [room_id, setRoom] = useState(initialValues?.room_id ?? null)
+  const [rooms, setRooms] = useState([])
+  const [saving, setSaving] = useState(false)
 
   const isEditing = !!initialValues
 
