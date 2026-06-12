@@ -19,7 +19,7 @@ router.post("/add", tenantAuth, async (req, res) => {
       `INSERT INTO complaints
        (pg_id, tenant_id, room_id, title, description, priority)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [pgId, tenantId, room_id || null, title, description, priority || "Normal"]
+      [pgId, tenantId, room_id || null, title, description, priority || 'Medium']
     );
 
     res.json({ message: "Complaint submitted successfully" });

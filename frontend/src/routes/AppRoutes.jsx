@@ -19,44 +19,44 @@ import Landing from '../pages/Landing'
 import Profile from '@/pages/tenant/Profile'
 import AdminAnalytics from '@/pages/admin/AdminAnalytics'
 
-function RequireAdmin({children}){
+function RequireAdmin({ children }) {
   const { user, loading } = useAuth()
-  if(loading) return <div className="p-6">Loading...</div>
-  if(!user || user.role !== 'admin') return <Navigate to="/admin/login" replace />
+  if (loading) return <div className="p-6">Loading...</div>
+  if (!user || user.role !== 'admin') return <Navigate to="/" replace />
   return children
 }
 
-function RequireTenant({children}){
+function RequireTenant({ children }) {
   const { user, loading } = useAuth()
-  if(loading) return <div className="p-6">Loading...</div>
-  if(!user || user.role !== 'tenant') return <Navigate to="/tenant/login" replace />
+  if (loading) return <div className="p-6">Loading...</div>
+  if (!user || user.role !== 'tenant') return <Navigate to="/" replace />
   return children
 }
 
 
-export default function AppRoutes(){
+export default function AppRoutes() {
   return (
     <Routes>
       {/* Landing page (no topbar) */}
       <Route path="/" element={<Landing />} />
 
       {/* Admin auth & protected area */}
-      <Route path="/admin/login" element={<AdminLogin/>} />
-      <Route path="/admin/signup" element={<AdminSignup/>} />
-      <Route path="/admin" element={<RequireAdmin> <AdminLayout/> </RequireAdmin>}>
-        <Route path="dashboard" element={<Dashboard/>} />
-        <Route path="rooms" element={<RoomsList/>} />
-        <Route path="tenants" element={<TenantsList/>} />
-        <Route path="rent" element={<RentList/>} />
-        <Route path="complaints" element={<ComplaintsList/>} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/signup" element={<AdminSignup />} />
+      <Route path="/admin" element={<RequireAdmin> <AdminLayout /> </RequireAdmin>}>
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="rooms" element={<RoomsList />} />
+        <Route path="tenants" element={<TenantsList />} />
+        <Route path="rent" element={<RentList />} />
+        <Route path="complaints" element={<ComplaintsList />} />
         <Route path="analytics" element={<AdminAnalytics />} />
       </Route>
 
       {/* Tenant auth & protected area  */}
-      <Route path="/tenant/login" element={<TenantLogin/>} />
-      <Route path="/tenant" element={<RequireTenant><TenantLayout/></RequireTenant>}>
-        <Route path="dashboard" element={<TenantDashboard/>} />
-        <Route path="rent" element={<MyRent/>} />
+      <Route path="/tenant/login" element={<TenantLogin />} />
+      <Route path="/tenant" element={<RequireTenant><TenantLayout /></RequireTenant>}>
+        <Route path="dashboard" element={<TenantDashboard />} />
+        <Route path="rent" element={<MyRent />} />
         <Route path="complaints" element={<Complaints />} />
         <Route path="profile" element={<Profile />} />
 

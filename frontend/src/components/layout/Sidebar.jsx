@@ -8,9 +8,9 @@ function LinkItem({ to, children }) {
       to={to}
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-3 rounded-lg 
-        ${isActive 
-          ? 'bg-[#F46A47] text-white'                     
-          : 'text-gray-300 hover:bg-[#ff7b55]/20'        
+        ${isActive
+          ? 'bg-[#F46A47] text-white'
+          : 'text-gray-300 hover:bg-[#ff7b55]/20'
         }`
       }
     >
@@ -23,15 +23,15 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const {logoutAdmin} = useAuth() ;
+  const { logoutAdmin } = useAuth();
 
   async function handleLogout(e) {
     e.preventDefault()
     setLoading(true)
-    try{
+    try {
       await logoutAdmin()
-      navigate('/admin/dashboard')
-    }catch(err){ 
+      navigate('/', {replace: true})  // replace clear browser history(cannot go back to admin section after logut using back arrow)
+    } catch (err) {
       alert('Logout failed: ' + (err.message || 'Please try again'))
     } finally {
       setLoading(false)
