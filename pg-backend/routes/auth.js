@@ -3,6 +3,7 @@ const pool = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+
 require('dotenv').config();
 
 const router = express.Router();
@@ -10,11 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
 const COOKIE_SECURE = (process.env.COOKIE_SECURE === 'true');
 
 router.use(express.json());
-
-// Keep cookieParser usage consistent (server.js already uses it; harmless here if called again)
 router.use(cookieParser());
-
-//---------------------  ADMIN SECTION ----------------------------------------
 
 // ADMIN SIGNUP
 router.post("/admin/signup", async (req, res, next) => {
@@ -38,27 +35,41 @@ router.post("/admin/signup", async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create PG first
-    const [pgResult] = await pool.query(
-      "INSERT INTO pgs (name, address) VALUES (?, ?)",
-      [pgName, pgAddress || null]
-    );
+    // Transaction start
+    const conn = await pool.getConnection();
+    await conn.beginTransaction();
 
-    const pgId = pgResult.insertId;
+    try {
+      // create PG/Hostel
+      const [pgResult] = await conn.query(
+        "INSERT INTO pgs (name, address) VALUES (?, ?)",
+        [pgName, pgAddress || null]
+      );
+      const pgId = pgResult.insertId;
 
-    // Create Admin
-    const [result] = await pool.query(
-      "INSERT INTO admins (pg_id, name, email, password_hash) VALUES (?, ?, ?, ?)",
-      [pgId, name || null, email, hashedPassword]
-    );
+      // create admin with pg/hostel id
+      const [result] = await conn.query(
+        "INSERT INTO admins (pg_id, name, email, password_hash) VALUES (?, ?, ?, ?)",
+        [pgId, name || null, email, hashedPassword]
+      );
 
-    return res.status(201).json({
-      message: "Signup successful",
-      user: { id: result.insertId, pgId, name, email },
-    });
+      // save changes into real DB
+      await conn.commit();
+      conn.release();
+
+      return res.status(201).json({
+        message: "Signup successful",
+        user: { id: result.insertId, pgId, name, email },
+      });
+
+    } catch (txError) {
+      // rollback if any error occurs
+      await conn.rollback();
+      conn.release();
+      throw txError; // error catches by outer catch() { next(error) }
+    }
 
   } catch (error) {
-    console.error(error);
     next(error);
   }
 });
@@ -91,7 +102,7 @@ router.post('/admin/login', async (req, res, next) => {
   } catch (err) { next(err) }
 });
 
-// ADMIN LOGOUT (unchanged)
+// ADMIN LOGOUT
 router.post('/admin/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
@@ -101,8 +112,7 @@ router.post('/admin/logout', (req, res) => {
   return res.json({ ok: true, message: 'Logged out' });
 });
 
-
-// ME - read user from cookie (unchanged)
+// ME - read user from cookie
 router.get('/me', async (req, res) => {
   try {
     const token = req.cookies && req.cookies.token;

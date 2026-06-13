@@ -14,7 +14,6 @@ router.post("/send", async (req, res) => {
     }
 
     const otp = generateOTP();
-    console.log("Generated OTP:", otp);
 
     await saveAdminOtp(email, otp);
 

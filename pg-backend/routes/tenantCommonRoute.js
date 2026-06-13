@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('../db');
+const bcrypt = require('bcrypt');
 const tenantAuth = require('../middleware/tenantAuth');
 
 const router = express.Router();
@@ -17,12 +18,11 @@ router.get('/rent', tenantAuth, async (req, res, next) => {
       status,
       date_paid
       FROM rent_records
-      WHERE id = ?
+      WHERE tenant_id = ?
       AND pg_id = ?
-      ORDER BY date_paid DESC`,
+      ORDER BY due_date ASC`,
       [tenantId, pgId]
     );
-    // console.log(rows[0]) ;
     res.json(rows);
   } catch (err) {
     next(err);

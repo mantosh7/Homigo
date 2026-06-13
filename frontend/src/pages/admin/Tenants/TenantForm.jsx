@@ -7,7 +7,7 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
   const [full_name, setName] = useState(initialValues?.full_name || '')
   const [phone, setPhone] = useState(initialValues?.phone || '')
   const [email, setEmail] = useState(initialValues?.email || '')
-  const [address, setAddress] = useState(initialValues?.permanent_address || '')
+  const [permanent_address, setPermanent_Address] = useState(initialValues?.permanent_address || '')
   const [room_id, setRoom] = useState(initialValues?.room_id ?? null)
   const [rooms, setRooms] = useState([])
   const [saving, setSaving] = useState(false)
@@ -78,8 +78,8 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
 
       <Input
         label="Address"
-        value={address}
-        onChange={e => setAddress(e.target.value)}
+        value={permanent_address}
+        onChange={e => setPermanent_Address(e.target.value)}
       />
 
       <Select

@@ -10,13 +10,15 @@ const roomsRoutes = require('./routes/rooms');
 const tenantsRoutes = require('./routes/tenants');
 const rentRoutes = require('./routes/rent');
 const complaintsRoutes = require('./routes/complaints');
-const  adminAnalyticsRoutes = require("./routes/adminAnalytics")
+const adminAnalyticsRoutes = require("./routes/adminAnalytics");
 const errorHandler = require('./middleware/errorHandler');
 
 const tenantAuthRoutes = require("./routes/tenantAuth");
 const tenantCommonRoute = require('./routes/tenantCommonRoute');
 const tenantComplaintRoutes = require("./routes/tenantComplaint");
 const testEmailRoute = require("./routes/testEmail");
+
+const { loginLimiter, apiLimiter } = require('./middleware/rateLimiter');
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 
@@ -27,22 +29,26 @@ app.use(cors({
   credentials: true,
 }));
 
-// admin section 
+// signup/login
+app.use('/api/auth/admin/login', loginLimiter);
+app.use('/api/auth/admin/signup', loginLimiter);
+app.use('/api/tenant/auth/login', loginLimiter);
+
+// admin section
 app.use('/api/auth', authRoutes);
-app.use('/api/rooms', roomsRoutes);
-app.use('/api/tenants', tenantsRoutes);  
-app.use('/api/rent', rentRoutes);
-app.use('/api/complaints', complaintsRoutes);
-app.use("/api/analytics", adminAnalyticsRoutes) ; 
+app.use('/api/rooms', apiLimiter, roomsRoutes);
+app.use('/api/tenants', apiLimiter, tenantsRoutes);
+app.use('/api/rent', apiLimiter, rentRoutes);
+app.use('/api/complaints', apiLimiter, complaintsRoutes);
+app.use("/api/analytics", apiLimiter, adminAnalyticsRoutes);
 
-// tenant section control
+// tenant section
 app.use("/api/tenant/auth", tenantAuthRoutes);
-app.use("/api/tenant", tenantCommonRoute);   // rent records, password cahnge, profile fetch
-app.use("/api/tenant/complaints", tenantComplaintRoutes);
+app.use("/api/tenant", apiLimiter, tenantCommonRoute);
+app.use("/api/tenant/complaints", apiLimiter, tenantComplaintRoutes);
 
-// email 
 app.use("/api/test-email", testEmailRoute);
 
 app.use(errorHandler);
 
-app.listen(port, ()=> console.log(`Server running on ${port}`));
+app.listen(port, () => console.log(`Server running on ${port}`));
