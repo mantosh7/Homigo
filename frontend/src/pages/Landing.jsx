@@ -4,21 +4,21 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Landing() {
   const navigate = useNavigate();
-  const {user, loading} = useAuth() ;
+  const { user, loading } = useAuth();
 
-  function handleClick(e){
-    e.preventDefault() ;
-    if(loading){
-      alert("loading") ;
-      return ;
+  function handleClick(e) {
+    e.preventDefault();
+    if (loading) {
+      alert("loading");
+      return;
     }
 
-    if(user && user.role==="admin") navigate("/admin/dashboard") ;
-    else navigate("/admin/login") ;
+    if (user && user.role === "admin") navigate("/admin/dashboard");
+    else navigate("/admin/login");
   }
 
   return (
-    <div className="min-h-screen bg-[#1a2332] text-white flex">
+    <div className="min-h-screen bg-[#1c1c1e] text-white flex">
       <div className="flex w-full">
         {/* Left Section */}
         <div className="w-1/2 flex items-center px-12 lg:px-16 py-20">
@@ -40,9 +40,8 @@ export default function Landing() {
 
             <div className="flex gap-8">
               <button
-                // onClick={() => navigate('/admin/login')}
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#ff6b4a] to-[#ff8a6b] text-white font-semibold px-10 py-2 rounded-lg hover:shadow-lg transition-all"
+                className="bg-[#F46A47] text-white font-semibold px-10 py-2 rounded-lg hover:shadow-lg transition-all"
               >
                 Admin
               </button>
@@ -58,10 +57,10 @@ export default function Landing() {
         </div>
 
         {/* Right Section */}
-        <div className="w-1/2 bg-[#ff6b4a] flex items-center justify-center px-12 lg:px-16 py-20">
+        <div className="w-1/2 bg-[#F46A47] flex items-center justify-center px-12 lg:px-16 py-20">
           <div className="max-w-lg">
             <h2 className="text-white text-4xl font-bold mb-12">Key Features</h2>
-            
+
             <div className="space-y-8">
               <div className="flex gap-4">
                 <div className="flex-shrink-0 w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
