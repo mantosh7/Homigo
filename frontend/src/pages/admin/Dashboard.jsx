@@ -14,6 +14,8 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
+
+        // Load dashboard data in parallel for better performance
         const [roomsData, tenantsData, complaintsData] = await Promise.all([
           getRooms(),
           getTenants(),
@@ -23,6 +25,7 @@ export default function Dashboard() {
         setRooms(roomsData || [])
         setTenants(tenantsData || [])
         setComplaints(complaintsData || [])
+
       } catch (error) {
         console.error('Dashboard fetch error:', error)
       } finally {
@@ -33,21 +36,30 @@ export default function Dashboard() {
     fetchData()
   }, [])
 
-  // Total seats across all rooms
-  const totalSeats = rooms.reduce((sum, room) => sum + room.capacity, 0)
+  // Total capacity across all rooms
+  const totalSeats = rooms.reduce(
+    (sum, room) => sum + (room.capacity || 0),
+    0
+  )
 
-  // Sum capacity of only occupied rooms
-  const occupiedSeats = rooms
-    .filter(room => room.is_occupied === 1 || room.is_occupied === true || room.is_occupied === '1')
-    .reduce((sum, room) => sum + room.capacity, 0)
+  // Occupancy is calculated dynamically by the backend
+  const occupiedSeats = rooms.reduce(
+    (sum, room) => sum + (Number(room.occupied_seats) || 0),
+    0
+  )
 
-  const vacantSeats = totalSeats - occupiedSeats
+  const vacantSeats = rooms.reduce(
+    (sum, room) => sum + (Number(room.available_seats) || 0),
+    0
+  )
+
+  // Active tenants currently checked into the PG
   const totalTenants = tenants.length
 
   return (
     <div className="space-y-6">
 
-      {/* Summary Cards */}
+      {/* Dashboard summary */}
       <div className="grid grid-cols-4 gap-4">
         <Card
           title="Total Seats"
@@ -56,6 +68,7 @@ export default function Dashboard() {
           color="indigo"
           hint="All rooms combined"
         />
+
         <Card
           title="Occupied"
           value={loading ? '...' : occupiedSeats}
@@ -63,6 +76,7 @@ export default function Dashboard() {
           color="red"
           hint="Currently occupied"
         />
+
         <Card
           title="Vacant"
           value={loading ? '...' : vacantSeats}
@@ -70,6 +84,7 @@ export default function Dashboard() {
           color="green"
           hint="Available right now"
         />
+
         <Card
           title="Active Tenants"
           value={loading ? '...' : totalTenants}
@@ -79,10 +94,10 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent activity */}
       <div className="grid grid-cols-2 gap-6">
 
-        {/* Recent Tenants */}
+        {/* Recently added tenants */}
         <Card className="p-6">
           <h3 className="font-semibold mb-3">Recent Tenants</h3>
 
@@ -95,10 +110,15 @@ export default function Dashboard() {
           )}
 
           {!loading && tenants.slice(0, 5).map(tenant => (
-            <div key={tenant.id} className="py-2 border-b border-white/5 flex items-center gap-2">
+            <div
+              key={tenant.id}
+              className="py-2 border-b border-white/5 flex items-center gap-2"
+            >
+              {/* Avatar generated from first character */}
               <span className="w-7 h-7 rounded-full bg-blue-500/20 text-blue-400 text-xs flex items-center justify-center font-medium">
                 {(tenant.full_name || tenant.name || tenant.email || '?')[0].toUpperCase()}
               </span>
+
               <span className="text-sm">
                 {tenant.full_name || tenant.name || tenant.email}
               </span>
@@ -106,7 +126,7 @@ export default function Dashboard() {
           ))}
         </Card>
 
-        {/* Recent Complaints */}
+        {/* Latest complaints */}
         <Card className="p-6">
           <h3 className="font-semibold mb-3">Recent Complaints</h3>
 
@@ -119,13 +139,17 @@ export default function Dashboard() {
           )}
 
           {!loading && complaints.slice(0, 5).map(complaint => (
-            <div key={complaint.id} className="py-2 border-b border-white/5 flex justify-between items-center gap-2">
-
+            <div
+              key={complaint.id}
+              className="py-2 border-b border-white/5 flex justify-between items-center gap-2"
+            >
               <span className="text-sm truncate">
                 {complaint.title || complaint.description}
               </span>
 
               <div className="flex items-center gap-2 shrink-0">
+
+                {/* Complaint priority */}
                 <span className={`text-xs px-2 py-0.5 rounded-full ${complaint.priority === 'High'
                   ? 'bg-red-500/20 text-red-400'
                   : complaint.priority === 'Medium'
@@ -135,14 +159,15 @@ export default function Dashboard() {
                   {complaint.priority || 'Low'}
                 </span>
 
+                {/* Complaint status */}
                 <span className={`text-xs px-2 py-0.5 rounded-full ${complaint.status === 'Resolved'
                   ? 'bg-green-500/20 text-green-400'
                   : 'bg-orange-500/20 text-orange-400'
                   }`}>
                   {complaint.status || 'Open'}
                 </span>
-              </div>
 
+              </div>
             </div>
           ))}
         </Card>
