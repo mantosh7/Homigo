@@ -5,226 +5,185 @@ import HomeButton from '@/components/ui/HomeButton'
 import api from '@/services/api'
 
 export default function AdminSignup() {
-  const [pgName, setPgName] = useState('')
-  const [pgAddress, setPgAddress] = useState('')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-
-  // OTP states
+  const [form, setForm] = useState({
+    pgName: '', pgAddress: '', name: '', email: '', password: '', confirmPassword: ''
+  })
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otpVerified, setOtpVerified] = useState(false)
   const [otpLoading, setOtpLoading] = useState(false)
-
   const [loading, setLoading] = useState(false)
+
   const nav = useNavigate()
   const { signupAdmin } = useAuth()
 
-  // send OTP
-  async function sendOtp() {
-    if (!email) {
-      alert('Please enter email first')
-      return
-    }
+  const set = field => e => setForm(f => ({ ...f, [field]: e.target.value }))
 
+  async function sendOtp() {
+    if (!form.email) return alert('Please enter email first')
     setOtpLoading(true)
     try {
-      await api.post('/test-email/send', { email })
+      await api.post('/test-email/send', { email: form.email })
       setOtpSent(true)
       alert('OTP sent to your email')
-    } catch (err) {
+    } catch {
       alert('Failed to send OTP')
-    }
-    setOtpLoading(false)
+    } finally { setOtpLoading(false) }
   }
 
-  // verify OTP
   async function verifyOtp() {
-    if (!otp) {
-      alert('Please enter OTP')
-      return
-    }
-
+    if (!otp) return alert('Please enter OTP')
     setOtpLoading(true)
     try {
-      await api.post('/test-email/verify', { email, otp })
+      await api.post('/test-email/verify', { email: form.email, otp })
       setOtpVerified(true)
-      alert('OTP verified successfully')
     } catch (err) {
       alert(err?.response?.data?.message || 'OTP verification failed')
-    }
-    setOtpLoading(false)
+    } finally { setOtpLoading(false) }
   }
 
-  // submit handler
   async function submit(e) {
     e.preventDefault()
-
-    if (!otpVerified) {
-      alert('Please verify OTP first')
-      return
-    }
-
-    if (password !== confirmPassword) {
-      alert('Passwords do not match')
-      return
-    }
-
+    if (!otpVerified) return alert('Please verify OTP first')
+    if (form.password !== form.confirmPassword) return alert('Passwords do not match')
     setLoading(true)
     try {
-      await signupAdmin(pgName, pgAddress, name, email, password, true)
-      alert("Signup successful!")
+      await signupAdmin(form.pgName, form.pgAddress, form.name, form.email, form.password, true)
+      alert('Signup successful!')
       nav('/admin/login')
     } catch (err) {
       alert('Signup failed: ' + (err.message || 'Please try again'))
-    }
-    setLoading(false)
+    } finally { setLoading(false) }
+  }
+
+  function InputField({ label, type = 'text', value, onChange, placeholder, required, disabled }) {
+    return (
+      <div>
+        <label className="block text-sm text-white mb-1.5">{label}</label>
+        <input
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          required={required}
+          disabled={disabled}
+          className="w-full px-3 py-2.5 rounded-lg text-sm text-white
+                   bg-white/5 border border-white/10
+                   placeholder:text-gray-600 disabled:opacity-40 transition"
+        />
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1a2332]">
+    <div className="min-h-screen flex items-center justify-center bg-[#1c1c1e] px-4 py-10">
       <HomeButton />
-      <div className="w-full max-w-md panel p-8 bg-slate-800 rounded-lg">
-        <h2 className="text-2xl font-bold mb-2 text-white">Admin Signup</h2>
-        <p className="text-sm text-slate-400 mb-6">Create your admin account</p>
+
+      <div className="w-full max-w-md panel p-8">
+
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-1">Admin Signup</h2>
+          <p className="text-sm text-gray-500">Create your PG management account</p>
+        </div>
 
         <form onSubmit={submit} className="space-y-4">
-          <label className="block text-sm text-white">
-            PG Name
-            <input
-              value={pgName}
-              onChange={e => setPgName(e.target.value)}
-              className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
-              placeholder="Homigo Boys PG"
-              required
-            />
-          </label>
 
-          <label className="block text-sm text-white">
-            PG Address
-            <input
-              value={pgAddress}
-              onChange={e => setPgAddress(e.target.value)}
-              className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
-              placeholder="Sector 62, Noida"
-            />
-          </label>
+          <InputField label="PG Name" value={form.pgName} onChange={set('pgName')}
+            placeholder="Sunshine Boys PG" required />
 
-          <label className="block text-sm text-white">
-            Name
-            <input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
-              placeholder="John Doe"
-              required
-            />
-          </label>
+          <InputField label="PG Address" value={form.pgAddress} onChange={set('pgAddress')}
+            placeholder="Sector 62, Noida" />
 
-          <label className="block text-sm text-white">
-            Email
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
-              placeholder="admin@pg.local"
-              required
-              disabled={otpVerified}
-            />
-          </label>
+          <InputField label="Your Name" value={form.name} onChange={set('name')}
+            placeholder="John Doe" required />
 
-          {/*  send OTP */}
-          {!otpSent && (
-            <button
-              type="button"
-              onClick={sendOtp}
-              disabled={otpLoading}
-              className="w-full py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-600 transition"
-            >
-              {otpLoading ? 'Sending OTP...' : 'Send OTP'}
-            </button>
-          )}
+          {/* Email + OTP */}
+          <div>
+            <label className="block text-sm text-white mb-1.5">Email</label>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={form.email}
+                onChange={set('email')}
+                placeholder="admin@pg.com"
+                required
+                disabled={otpVerified}
+                className="flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm text-white
+                           bg-white/5 border border-white/10
+                           placeholder:text-gray-600 disabled:opacity-40"
+              />
+              {!otpVerified && (
+                <button
+                  type="button"
+                  onClick={sendOtp}
+                  disabled={otpLoading}
+                  className="shrink-0 px-3 py-2.5 rounded-lg text-xs font-medium
+                             bg-white/8 text-gray-300 border border-white/10
+                             hover:bg-white/12 transition disabled:opacity-50"
+                >
+                  {otpLoading && !otpSent ? 'Sending...' : otpSent ? 'Resend' : 'Send OTP'}
+                </button>
+              )}
+              {otpVerified && (
+                <span className="shrink-0 flex items-center text-sm text-green-400">
+                  ✓ Verified
+                </span>
+              )}
+            </div>
+          </div>
 
-          {/*  verify OTP */}
+          {/* OTP verify — shows after send */}
           {otpSent && !otpVerified && (
-            <div className="space-y-2">
+            <div className="flex gap-2">
               <input
                 value={otp}
                 onChange={e => setOtp(e.target.value)}
                 placeholder="Enter OTP"
-                className="w-full p-3 rounded bg-transparent border border-gray-700 text-white"
+                className="flex-1 min-w-0 px-3 py-2.5 rounded-lg text-sm text-white
+                           bg-white/5 border border-white/10 placeholder:text-gray-600"
               />
               <button
                 type="button"
                 onClick={verifyOtp}
                 disabled={otpLoading}
-                className="w-full py-2 rounded bg-slate-700 text-white text-sm hover:bg-slate-600 transition"
+                className="shrink-0 px-3 py-2.5 rounded-lg text-xs font-medium
+                           bg-[#F46A47]/15 text-[#F46A47] border border-[#F46A47]/20
+                           hover:bg-[#F46A47]/25 transition disabled:opacity-50"
               >
-                {otpLoading ? 'Verifying...' : 'Verify OTP'}
+                {otpLoading ? 'Verifying...' : 'Verify'}
               </button>
             </div>
           )}
 
-          {/*  OTP verified */}
-          {otpVerified && (
-            <div className="text-green-400 text-sm font-semibold text-center">
-              ✅ OTP Verified
-            </div>
-          )}
+          <InputField label="Password" type="password" value={form.password}
+            onChange={set('password')} placeholder="Min. 8 characters" required />
 
-          <label className="block text-sm text-white">
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
-              placeholder="••••••••"
-              required
-            />
-          </label>
+          <InputField label="Confirm Password" type="password" value={form.confirmPassword}
+            onChange={set('confirmPassword')} placeholder="••••••••" required />
 
-          <label className="block text-sm text-white">
-            Confirm Password
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              className="w-full mt-2 p-3 rounded bg-transparent border border-gray-700 text-white"
-              placeholder="••••••••"
-              required
-            />
-          </label>
+          <button
+            type="submit"
+            disabled={loading || !otpVerified}
+            className="w-full py-2.5 mt-2 rounded-lg text-sm font-semibold
+                       bg-[#F46A47] text-white hover:bg-[#D95738] transition
+                       disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Creating account...' : 'Sign Up'}
+          </button>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading || !otpVerified}
-              className={`w-full py-3 rounded font-semibold transition-all
-                ${otpVerified
-                  ? 'bg-gradient-to-r from-[#ff6b4a] to-[#ff8a6b] text-white hover:shadow-lg'
-                  : 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                }`}
-            >
-              {loading ? 'Creating Account...' : 'Sign Up'}
-            </button>
-          </div>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-slate-400">
-            Already have an account?{' '}
-            <button
-              onClick={() => nav('/admin/login')}
-              className="text-[#ff6b4a] hover:text-[#ff8a6b] font-semibold"
-            >
-              Sign In
-            </button>
-          </p>
-        </div>
+        <p className="mt-5 text-center text-sm text-gray-200">
+          Already have an account?{' '}
+          <button
+            onClick={() => nav('/admin/login')}
+            className="text-[#F89A85] transition-colors duration-200 hover:text-[#F67D61] hover:underline font-medium"
+          >
+            Sign In
+          </button>
+        </p>
+
       </div>
     </div>
   )
