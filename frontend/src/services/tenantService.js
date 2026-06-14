@@ -13,6 +13,9 @@ export const deleteTenant = (id) =>
 export const updateTenant = (id, data) =>
   api.put(`/tenants/update/${id}`, data).then(r => r.data);
 
+export const resendInvite = (id) =>
+  api.post(`/tenants/resend-invite/${id}`).then(r => r.data);
+
 // used by tenant section
 export const getTenantProfile = () =>
   api.get('/tenant/profile').then(r => r.data) ;

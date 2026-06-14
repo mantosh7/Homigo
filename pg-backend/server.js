@@ -35,6 +35,7 @@ app.use(cors({
 app.use('/api/auth/admin/login', loginLimiter);
 app.use('/api/auth/admin/signup', loginLimiter);
 app.use('/api/tenant/auth/login', loginLimiter);
+app.use('/api/tenants/set-password', loginLimiter);
 
 // admin section
 app.use('/api/auth', authRoutes);

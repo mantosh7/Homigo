@@ -13,6 +13,7 @@ import TenantDashboard from '../pages/tenant/TenantDashboard'
 import useAuth from '../hooks/useAuth'
 import MyRent from '../pages/tenant/MyRent'
 import Complaints from '@/pages/tenant/complaints'
+import SetPassword from '@/pages/SetPassword'
 
 
 import Landing from '../pages/Landing'
@@ -39,6 +40,9 @@ export default function AppRoutes() {
     <Routes>
       {/* Landing page (no topbar) */}
       <Route path="/" element={<Landing />} />
+
+      {/* Public invite route — no auth needed */}
+      <Route path="/set-password" element={<SetPassword />} />
 
       {/* Admin auth & protected area */}
       <Route path="/admin/login" element={<AdminLogin />} />

@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import Card from '../../../components/ui/Card'
 import Modal from '../../../components/ui/Modal'
 import TenantForm from './TenantForm'
-import { getTenants, createTenant, deleteTenant, updateTenant } from '../../../services/tenantService'
+import { getTenants, createTenant, deleteTenant, updateTenant, resendInvite } from '../../../services/tenantService'
 import { getRooms } from '../../../services/roomService'
 
 const fmt = (d) => d ? dayjs(d).format('MMM D, YYYY') : ''
@@ -46,6 +46,19 @@ export default function TenantsList() {
       await loadAll()
     } catch (e) {
       alert(e?.response?.data?.message || 'Failed to delete tenant')
+    } finally {
+      setOpLoading(false)
+    }
+  }
+
+  // Resend invite 
+  async function onResendInvite(id) {
+    setOpLoading(true)
+    try {
+      await resendInvite(id)
+      alert('Invite resent successfully!')
+    } catch (e) {
+      alert(e?.response?.data?.message || 'Failed to resend invite')
     } finally {
       setOpLoading(false)
     }
@@ -130,22 +143,23 @@ export default function TenantsList() {
         <Card title="Unassigned" value={unassigned} icon="!" color="yellow" hint="No room assigned" />
       </div>
 
-      {/* ── Loading indicator ── */}
+      {/*  Loading indicator */}
       {(loading || opLoading) && (
         <p className="text-gray-500 text-sm mb-4">Loading...</p>
       )}
 
-      {/* ── Empty state ── */}
+      {/*  Empty state  */}
       {!loading && tenants.length === 0 && (
         <div className="text-center text-gray-500 text-sm py-16 panel rounded-xl">
           No tenants yet — click "Add New Tenant" to get started.
         </div>
       )}
 
-      {/* ── Tenant cards grid ── */}
+      {/*  Tenant cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {tenants.map(t => {
           const avatarLetter = (t.full_name || 'A')[0].toUpperCase()
+          const invitePending = t.invite_pending === 1
 
           return (
             <Card key={t.id ?? t._id} className="p-5">
@@ -197,6 +211,7 @@ export default function TenantsList() {
                 >
                   Edit
                 </button>
+
                 <button
                   onClick={() => onMoveOut(t.id)}
                   disabled={opLoading}
@@ -204,6 +219,18 @@ export default function TenantsList() {
                 >
                   Move Out
                 </button>
+
+                {/*  Resend invite  */}
+                {invitePending && (
+                  <button
+                    onClick={() => onResendInvite(t.id)}
+                    disabled={opLoading}
+                    className="flex-1 py-1.5 text-xs rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 transition text-yellow-400 disabled:opacity-50"
+                  >
+                    Resend Invite
+                  </button>
+                )}
+
               </div>
 
             </Card>
