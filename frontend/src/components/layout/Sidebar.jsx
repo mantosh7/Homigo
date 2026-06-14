@@ -2,77 +2,78 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import useAuth from '@/hooks/useAuth'
 
-function LinkItem({ to, children }) {
+const navLinks = [
+  { to: '/admin/dashboard', label: 'Dashboard' },
+  { to: '/admin/rooms', label: 'Rooms' },
+  { to: '/admin/tenants', label: 'Tenants' },
+  { to: '/admin/rent', label: 'Rent' },
+  { to: '/admin/complaints', label: 'Complaints' },
+  { to: '/admin/analytics', label: 'Analytics' },
+]
+
+function NavItem({ to, label }) {
   return (
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-3 rounded-lg 
-        ${isActive
-          ? 'bg-[#F46A47] text-white'
-          : 'text-gray-300 hover:bg-[#ff7b55]/20'
+        `block px-4 py-2.5 rounded-lg text-sm transition-colors duration-150 ${isActive
+          ? 'bg-[#F46A47] text-white font-medium'
+          : 'text-gray-400 hover:text-white hover:bg-white/5'
         }`
       }
     >
-      {children}
+      {label}
     </NavLink>
   )
 }
 
 export default function Sidebar() {
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const { logoutAdmin } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false)
+  const { logoutAdmin } = useAuth()
 
-  async function handleLogout(e) {
-    e.preventDefault()
-    setLoading(true)
+  async function handleLogout() {
+    setLoggingOut(true)
     try {
       await logoutAdmin()
-      navigate('/', {replace: true})  // replace clear browser history(cannot go back to admin section after logut using back arrow)
-    } catch (err) {
-      alert('Logout failed: ' + (err.message || 'Please try again'))
+      // replace:true clears history — user can't go back after logout
+      navigate('/', { replace: true })
+    } catch {
+      alert('Logout failed. Please try again.')
     } finally {
-      setLoading(false)
+      setLoggingOut(false)
     }
   }
 
   return (
-    <aside className="w-64 h-screen sticky top-0 p-6 bg-gradient-to-b from-[#071026] to-[#06101a] flex flex-col justify-between">
+    <aside className="w-64 h-screen sticky top-0 flex flex-col justify-between p-6">
+
+      {/* Logo */}
       <div>
-        <div className="mb-8 ">
+        <div className="mb-8">
           <div className="text-2xl font-bold text-[#F46A47]">Homigo</div>
-          <div className="text-xs text-gray-400">Admin Portal</div>
+          <div className="text-xs text-gray-500 mt-0.5">Admin Portal</div>
         </div>
 
-        <nav className="space-y-2">
-          <LinkItem to="/admin/dashboard">Dashboard</LinkItem>
-          <LinkItem to="/admin/rooms">Rooms</LinkItem>
-          <LinkItem to="/admin/tenants">Tenants</LinkItem>
-          <LinkItem to="/admin/rent">Rent</LinkItem>
-          <LinkItem to="/admin/complaints">Complaints</LinkItem>
-          <LinkItem to="/admin/analytics">Analytics Dashboard</LinkItem>
+        {/* Nav links */}
+        <nav className="space-y-1">
+          {navLinks.map(link => (
+            <NavItem key={link.to} to={link.to} label={link.label} />
+          ))}
         </nav>
       </div>
 
-      <div className="mt-[20px] bg-gradient-to-b from-[#071026] to-[#06101a]">
-        {error && <div className="text-xs text-red-400 mb-2">{error}</div>}
+      {/* Logout */}
+      <button
+        onClick={handleLogout}
+        disabled={loggingOut}
+        className="w-full py-2.5 text-sm rounded-lg bg-[#F46A47] text-white
+                   hover:bg-[#D95738] transition-colors duration-150
+                   disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {loggingOut ? 'Logging out...' : 'Logout'}
+      </button>
 
-        <button
-          onClick={handleLogout}
-          disabled={loading}
-          className="w-full text-center px-4 py-3 text-sm 
-                     bg-[#F46A47] text-white 
-                     border border-[#F46A47] 
-                     rounded-lg 
-                     hover:bg-[#D95738] 
-                     transition"
-          aria-disabled={loading}
-        >
-          {loading ? 'Logging out...' : 'Logout'}
-        </button>
-      </div>
     </aside>
   )
 }
