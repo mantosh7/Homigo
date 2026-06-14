@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('../db');
 const bcrypt = require('bcrypt');
 const tenantAuth = require('../middleware/tenantAuth');
+const AppError = require('../middleware/AppError');
 
 const router = express.Router();
 
@@ -9,18 +10,14 @@ const router = express.Router();
 router.get('/rent', tenantAuth, async (req, res, next) => {
   try {
     const tenantId = req.user.id;
-    const pgId = req.user.pgId ;
+    const pgId = req.user.pgId;
 
     const [rows] = await pool.query(
-      `SELECT 
-      amount,
-      due_date,
-      status,
-      date_paid
-      FROM rent_records
-      WHERE tenant_id = ?
-      AND pg_id = ?
-      ORDER BY due_date ASC`,
+      `SELECT amount, due_date, status, date_paid
+        FROM rent_records
+        WHERE tenant_id = ?
+        AND pg_id = ?
+        ORDER BY due_date ASC`,
       [tenantId, pgId]
     );
     res.json(rows);
@@ -33,20 +30,19 @@ router.get('/rent', tenantAuth, async (req, res, next) => {
 // GET TENANT PROFILE DETAILS
 router.get('/profile', tenantAuth, async (req, res, next) => {
   try {
-    const pgId = req.user.pgId ;
+    const pgId = req.user.pgId;
     const tenantId = req.user.id;
 
     const [rows] = await pool.query(`
-      SELECT 
-        t.full_name,
-        t.email,
-        t.permanent_address AS address,
-        r.room_number,
-        r.room_type
+      SELECT t.full_name, t.email, t.permanent_address AS address, r.room_number, r.room_type
       FROM tenants t
       LEFT JOIN rooms r ON t.room_id = r.id
       WHERE t.id=? AND t.pg_id=?
     `, [tenantId, pgId]);
+
+    if (!rows.length) {
+      throw new AppError('Tenant profile not found', 404);
+    }
 
     res.json(rows[0]);
   } catch (err) {
@@ -64,7 +60,7 @@ router.post('/change-password', tenantAuth, async (req, res, next) => {
     const { oldPassword, newPassword } = req.body;
 
     if (!oldPassword || !newPassword) {
-      return res.status(400).json({ message: 'Missing fields' });
+      throw new AppError('Missing fields', 400);
     }
 
     const [rows] = await pool.query(
@@ -73,12 +69,12 @@ router.post('/change-password', tenantAuth, async (req, res, next) => {
     );
 
     if (!rows.length || !rows[0].password_hash) {
-      return res.status(400).json({ message: 'Password not found for tenant' });
+      throw new AppError('Password not found for tenant', 404);
     }
 
     const match = await bcrypt.compare(oldPassword, rows[0].password_hash);
     if (!match) {
-      return res.status(400).json({ message: 'Old password is incorrect' });
+      throw new AppError('Old password is incorrect', 400);
     }
 
 

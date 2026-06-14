@@ -1,16 +1,17 @@
 const express = require("express");
 const transporter = require("../utils/email");
 const generateOTP = require("../utils/otp");
-const {saveAdminOtp, verifyAdminOtp, deleteAdminOTP} = require("../utils/adminOtp");
+const { saveAdminOtp, verifyAdminOtp, deleteAdminOTP } = require("../utils/adminOtp");
+const AppError = require('../middleware/AppError');
 
 const router = express.Router();
 
-router.post("/send", async (req, res) => {
+router.post("/send", async (req, res, next) => {
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+      throw new AppError('Email is required', 400);
     }
 
     const otp = generateOTP();
@@ -26,30 +27,34 @@ router.post("/send", async (req, res) => {
 
     res.json({ message: "OTP email sent" });
   } catch (err) {
-    console.error("EMAIL ERROR:", err);
-    res.status(500).json({ message: "Email failed" });
+    next(err)
   }
 });
 
-router.post('/verify', async (req, res)=>{
+router.post('/verify', async (req, res, next) => {
   try {
-    const {email, otp} = req.body ;
+    const { email, otp } = req.body;
 
-    if(!email || !otp) return res.status(400).json({message: "Email and OTP required"}) ;
+    if (!email || !otp) {
+      throw new AppError('Email and OTP required', 400);
+    }
 
-    const [row] = await verifyAdminOtp(email, otp) ;
-    if(row.length == 0) return res.status(400).json({message: "Invalid OTP"}) ;
+    const [row] = await verifyAdminOtp(email, otp);
+    if (row.length === 0) {
+      throw new AppError('Invalid OTP', 400);
+    }
 
-    const record = row[0] ;
-    
-    if(new Date(record.expires_at) < new Date()) return res.status(400).json({message: "Invalid expired"}) ;
+    const record = row[0];
 
-    await deleteAdminOTP(email) ;
-    res.json({message: "OTP verified successfully"}) ;
-    
+    if (new Date(record.expires_at) < new Date()) {
+      throw new AppError('OTP has expired', 400);
+    }
+
+    await deleteAdminOTP(email);
+    res.json({ message: "OTP verified successfully" });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Verification failed" });
+    next(err)
   }
 })
 

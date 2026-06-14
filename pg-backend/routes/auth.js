@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const AppError = require('../middleware/AppError');
 const cookieParser = require('cookie-parser');
 
 require('dotenv').config();
@@ -19,18 +20,19 @@ router.post("/admin/signup", async (req, res, next) => {
     const { pgName, pgAddress, name, email, password, otpVerified } = req.body;
 
     if (!otpVerified) {
-      return res.status(403).json({
-        message: "Please verify email using OTP before signup"
-      });
+      throw new AppError('Please verify email using OTP before signup', 403);
     }
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
+      throw new AppError(
+        'Email and password required',
+        400
+      );
     }
 
     const [rows] = await pool.query("SELECT id FROM admins WHERE email = ?", [email]);
     if (rows.length > 0) {
-      return res.status(409).json({ message: "Admin already exists!" });
+      throw new AppError('Admin already exists!', 409);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -83,10 +85,14 @@ router.post('/admin/login', async (req, res, next) => {
     const [rows] = await pool.query('SELECT id, pg_id, name, email, password_hash FROM admins WHERE email = ?', [email]);
 
     const admin = rows[0];
-    if (!admin) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!admin) {
+      throw new AppError('Invalid credentials', 401);
+    }
 
     const ok = await bcrypt.compare(password, admin.password_hash);
-    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!ok) {
+      throw new AppError('Invalid credentials', 401);
+    }
 
     const payload = { id: admin.id, pgId: admin.pg_id, role: 'admin', email: admin.email, name: admin.name };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });

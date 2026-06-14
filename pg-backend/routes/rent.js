@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db');
 const { adminAuth } = require('../middleware/auth');
+const AppError = require('../middleware/AppError');
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ router.post('/create', adminAuth, async (req, res, next) => {
     let { tenant_id, amount, due_date } = req.body;
 
     if (tenant_id === undefined || tenant_id === null || amount === undefined || amount === null) {
-      return res.status(400).json({ message: "Tenant and amount required" });
+      throw new AppError('Tenant and amount required', 400);
     }
 
     // normalize types
@@ -35,7 +36,9 @@ router.post('/create', adminAuth, async (req, res, next) => {
     tenant_id = Number.isNaN(tenantNum) ? tenant_id : tenantNum;
 
     const amountNum = Number(amount);
-    if (Number.isNaN(amountNum)) return res.status(400).json({ message: "Invalid amount" });
+    if (Number.isNaN(amountNum)) {
+      throw new AppError('Invalid amount', 400);
+    }
     amount = amountNum;
 
     if (!due_date) due_date = null;
@@ -59,12 +62,16 @@ router.put('/pay/:id', adminAuth, async (req, res, next) => {
   const today = new Date();
 
   try {
-    await pool.query(
-      `UPDATE rent_records 
-       SET status = 'Paid', date_paid = ? 
-       WHERE id = ? AND pg_id=?`,
+    const [result] = await pool.query(
+      `UPDATE rent_records
+        SET status = 'Paid', date_paid = ?
+        WHERE id = ? AND pg_id=?`,
       [today, id, pgId]
     );
+
+    if (result.affectedRows === 0) {
+      throw new AppError('Rent record not found', 404);
+    }
 
     return res.json({ ok: true });
   } catch (err) {

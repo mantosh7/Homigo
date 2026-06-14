@@ -1,10 +1,11 @@
 const express = require("express");
 const pool = require("../db");
 const { adminAuth } = require('../middleware/auth')
+const AppError = require('../middleware/AppError')
 
 const router = express.Router();
 
-router.get("/summary", adminAuth, async (req, res) => {
+router.get("/summary", adminAuth, async (req, res, next) => {
   try {
 
     const pgId = req.user.pgId;
@@ -59,13 +60,12 @@ router.get("/summary", adminAuth, async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Analytics error:", error);
-    res.status(500).json({ message: "Failed to fetch analytics" });
+    next(error)
   }
 })
 
 // monthly trend
-router.get("/monthly-trend", adminAuth, async (req, res) => {
+router.get("/monthly-trend", adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
 
@@ -83,8 +83,7 @@ router.get("/monthly-trend", adminAuth, async (req, res) => {
 
     res.json(rows);
   } catch (error) {
-    console.error("Monthly trend error:", error);
-    res.status(500).json({ message: "Failed to fetch monthly trend" });
+    next(error)
   }
 });
 

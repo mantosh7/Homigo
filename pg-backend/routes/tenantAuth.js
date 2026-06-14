@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const AppError = require('../middleware/AppError');
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.post('/login', async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password required' });
+      throw new AppError('Email and password required', 400);
     }
 
     const [rows] = await pool.query(
@@ -25,12 +26,12 @@ router.post('/login', async (req, res, next) => {
     const tenant = rows[0];
 
     if (!tenant || tenant.is_active === 0) {
-      return res.status(401).json({ message: 'Invalid credentials or inactive tenant' });
+      throw new AppError('Invalid credentials or inactive tenant', 401);
     }
 
     const ok = await bcrypt.compare(password, tenant.password_hash);
     if (!ok) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      throw new AppError('Invalid credentials', 401);
     }
 
     const payload = {

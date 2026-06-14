@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const helmet = require("helmet");
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -22,6 +23,7 @@ const { loginLimiter, apiLimiter } = require('./middleware/rateLimiter');
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 
+app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
