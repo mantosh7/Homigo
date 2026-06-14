@@ -40,23 +40,37 @@ router.post('/add', adminAuth, async (req, res, next) => {
     const plainPassword = generatePassword()
     const passwordHash = await bcrypt.hash(plainPassword, 10)
 
-    const [result] = await pool.query(
-      `INSERT INTO tenants
+    const conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    try {
+      const [result] = await pool.query(
+        `INSERT INTO tenants
         (pg_id, full_name, phone, email, password_hash, room_id, join_date, emergency_contact, permanent_address, is_active)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [pgId, full_name, phone, email, passwordHash, room_id || null, join_date || null, emergency_contact || null, permanent_address || null]
-    )
+        [pgId, full_name, phone, email, passwordHash, room_id || null, join_date || null, emergency_contact || null, permanent_address || null]
+      )
 
-    // Sending login credentials to the tenant via email
-    await transporter.sendMail({
-      from: `"Homigo" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Homigo Login Credentials',
-      text: `Your account has been created.\n\nPassword: ${plainPassword}`
-    })
+      // Sending login credentials to the tenant via email
+      await transporter.sendMail({
+        from: `"Homigo" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Homigo Login Credentials',
+        text: `Your account has been created.\n\nPassword: ${plainPassword}`
+      })
 
-    res.json({ id: result.insertId })
+      await conn.commit();
+      conn.release();
 
+      return res.status(201).json({
+        message: "Tenant added successful",
+        id: result.insertId
+      })
+    } catch (txError) {
+      await conn.rollback();
+      conn.release();
+      throw txError
+    }
   } catch (err) {
     next(err)
   }
@@ -115,17 +129,7 @@ router.put('/update/:id', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const tenantId = req.params.id
-    const {
-      full_name,
-      phone,
-      email,
-      password,
-      room_id,
-      join_date,
-      emergency_contact,
-      permanent_address,
-      is_active
-    } = req.body
+    const {full_name, phone, email, password, room_id, join_date, emergency_contact, permanent_address, is_active} = req.body
 
     // Verify that the tenant exists
     const [rows] = await pool.query(
