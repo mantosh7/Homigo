@@ -1,46 +1,72 @@
 @import "tailwindcss";
-*{
+
+* {
   font-family: "Urbanist", sans-serif;
 }
 
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities; */
-
-:root{
-  --bg-1: #070912;
-  --bg-2: #0b1220;
-  /* --bg-1: white;
-  --bg-2: white; */
-  --panel: rgba(19,23,36,0.85);
-  --accent: #8b3cff;
+:root {
+  --accent: #F46A47;
 }
 
-html,body,#root{ height:100%; }
-body{
-  min-height:100%;
-  background: radial-gradient(1000px 600px at 10% 10%, rgba(55,12,120,0.12), transparent), linear-gradient(180deg,#071026 0%, #071222 100%);
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* Root  */
+body {
+  min-height: 100%;
+  background-color: #0d0d0d;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 70% 0%, rgba(244, 106, 71, 0.07), transparent);
   color: #cbd5e1;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-
 }
 
-.panel{
-  background: linear-gradient(180deg, rgba(21,27,40,0.6), rgba(12,16,28,0.6));
-  border: 1px solid rgba(255,255,255,0.03);
-  border-radius: 12px;
-  box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+/* Sidebar */
+aside {
+  background: #111111 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
-body, input {
-  color: #ffffff !important;
+/* Cards */
+.panel {
+  background: #1c1c1e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Text */
+body,
+input,
+textarea {
+  color: #e2e8f0 !important;
 }
 
 select {
-  color: #ffffff !important;
+  color: #e2e8f0 !important;
 }
 
 select option {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
+  background-color: #1c1c1e !important;
+  color: #e2e8f0 !important;
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  background-color: #141414 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: rgba(244, 106, 71, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(244, 106, 71, 0.08);
 }
