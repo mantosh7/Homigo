@@ -20,13 +20,8 @@ export default function TenantForm({ onSubmit, initialValues = null }) {
 
   async function fetchRooms() {
     try {
-      if (isEditing) {
-        const all = await getRooms()
-        setRooms(all || [])
-      } else {
-        const available = await getAvailableRooms()
-        setRooms(available || [])
-      }
+      const available = await getAvailableRooms()
+      setRooms(available || [])
     } catch (e) {
       console.error('Failed to fetch rooms', e)
     }
