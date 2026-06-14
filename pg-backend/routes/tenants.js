@@ -1,23 +1,45 @@
 const express = require('express')
+const bcrypt = require('bcrypt')
 const pool = require('../db')
 const { adminAuth } = require('../middleware/auth')
-const bcrypt = require('bcrypt')
 const generatePassword = require('../utils/password')
 const transporter = require('../utils/email')
+const AppError = require('../middleware/AppError')
 
 const router = express.Router()
 
-// ADD TENANT (Admin)
+// Add a new tenant (Admin)
 router.post('/add', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const { full_name, phone, email, room_id, join_date, emergency_contact, permanent_address } = req.body
 
-    //  Generate password
+    // Check whether the selected room has available capacity
+    if (room_id) {
+      const [roomCheck] = await pool.query(`
+        SELECT r.capacity, COUNT(t.id) AS current_count
+        FROM rooms r
+        LEFT JOIN tenants t ON t.room_id = r.id AND t.is_active = 1
+        WHERE r.id = ? AND r.pg_id = ?
+        GROUP BY r.id, r.capacity
+      `, [room_id, pgId])
+
+      // Room does not exist
+      if (!roomCheck.length) {
+        throw new AppError('Room not found', 404)
+      }
+
+      const { capacity, current_count } = roomCheck[0]
+
+      // Prevent assigning tenants beyond room capacity
+      if (current_count >= capacity) {
+        throw new AppError('Room is full. Cannot assign more tenants.', 400)
+      }
+    }
+
     const plainPassword = generatePassword()
     const passwordHash = await bcrypt.hash(plainPassword, 10)
 
-    // Insert tenant
     const [result] = await pool.query(
       `INSERT INTO tenants
         (pg_id, full_name, phone, email, password_hash, room_id, join_date, emergency_contact, permanent_address, is_active)
@@ -25,21 +47,13 @@ router.post('/add', adminAuth, async (req, res, next) => {
       [pgId, full_name, phone, email, passwordHash, room_id || null, join_date || null, emergency_contact || null, permanent_address || null]
     )
 
-    // Send password email
+    // Sending login credentials to the tenant via email
     await transporter.sendMail({
       from: `"Homigo" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Homigo Login Credentials',
       text: `Your account has been created.\n\nPassword: ${plainPassword}`
     })
-
-    // Mark room occupied (if assigned)
-    if (room_id) {
-      await pool.query(
-        'UPDATE rooms SET is_occupied = 1 WHERE id = ?',
-        [room_id]
-      )
-    }
 
     res.json({ id: result.insertId })
 
@@ -48,7 +62,7 @@ router.post('/add', adminAuth, async (req, res, next) => {
   }
 })
 
-// GET ALL ACTIVE TENANTS
+// Get all active tenants for the current PG/Hostel
 router.get('/all', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
@@ -58,73 +72,98 @@ router.get('/all', adminAuth, async (req, res, next) => {
       FROM tenants t
       LEFT JOIN rooms r ON t.room_id = r.id
       WHERE t.is_active = 1
-      AND t.pg_id=?
+      AND t.pg_id = ?
       ORDER BY t.id DESC
     `, [pgId])
+
     res.json(rows)
   } catch (err) {
     next(err)
   }
 })
 
-
-// DELETE TENANT (Move Out)
+// Delete tenant
 router.delete('/delete/:id', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const tenantId = req.params.id
 
-    //  Get tenant room
+    // Verify that the tenant exists
     const [rows] = await pool.query(
-      'SELECT room_id FROM tenants WHERE id=? AND pg_id=?',
+      'SELECT room_id FROM tenants WHERE id = ? AND pg_id = ?',
       [tenantId, pgId]
     )
 
     if (!rows.length) {
-      return res.status(404).json({ message: 'Tenant not found' })
+      throw new AppError('Tenant not found', 404)
     }
 
-    const roomId = rows[0].room_id
-
-    // Delete tenant
-    await pool.query('DELETE FROM tenants WHERE id=? AND pg_id=?', [tenantId, pgId])
-
-    // Free room
-    if (roomId) {
-      await pool.query(
-        'UPDATE rooms SET is_occupied = 0 WHERE id=? AND pg_id=?',
-        [roomId, pgId]
-      )
-    }
+    // Delete tenant record
+    await pool.query(
+      'DELETE FROM tenants WHERE id = ? AND pg_id = ?',
+      [tenantId, pgId]
+    )
 
     res.json({ ok: true })
-
   } catch (err) {
     next(err)
   }
 })
 
-
-// UPDATE TENANT
+// Update tenant details
 router.put('/update/:id', adminAuth, async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const tenantId = req.params.id
-    const { full_name, phone, email, password, room_id, join_date, emergency_contact, permanent_address, is_active } = req.body
+    const {
+      full_name,
+      phone,
+      email,
+      password,
+      room_id,
+      join_date,
+      emergency_contact,
+      permanent_address,
+      is_active
+    } = req.body
 
-    // Get previous room
+    // Verify that the tenant exists
     const [rows] = await pool.query(
-      'SELECT room_id FROM tenants WHERE id=? AND pg_id=?',
+      'SELECT room_id FROM tenants WHERE id = ? AND pg_id = ?',
       [tenantId, pgId]
     )
 
     if (!rows.length) {
-      return res.status(404).json({ message: 'Tenant not found' })
+      throw new AppError('Tenant not found', 404)
     }
 
+    // Store current room assignment before updating
     const prevRoomId = rows[0].room_id
 
-    // Build update query
+    // If room assignment is changing, validate the target room capacity
+    if (room_id !== undefined && room_id !== prevRoomId && room_id) {
+      const [roomCheck] = await pool.query(`
+        SELECT r.capacity, COUNT(t.id) AS current_count
+        FROM rooms r
+        LEFT JOIN tenants t ON t.room_id = r.id AND t.is_active = 1
+        WHERE r.id = ? AND r.pg_id = ?
+        GROUP BY r.id, r.capacity
+      `, [room_id, pgId])
+
+      // Target room does not exist
+      if (!roomCheck.length) {
+        throw new AppError('Room not found', 404)
+      }
+
+      const { capacity, current_count } = roomCheck[0]
+
+      // Prevent moving tenant into a full room
+      if (current_count >= capacity) {
+        throw new AppError('Room is full. Cannot assign more tenants.', 400)
+      }
+    }
+
+    // Build update query dynamically based on provided fields
     const fields = []
     const values = []
 
@@ -135,11 +174,7 @@ router.put('/update/:id', adminAuth, async (req, res, next) => {
     if (emergency_contact !== undefined) { fields.push('emergency_contact = ?'); values.push(emergency_contact || null) }
     if (permanent_address !== undefined) { fields.push('permanent_address = ?'); values.push(permanent_address || null) }
     if (is_active !== undefined) { fields.push('is_active = ?'); values.push(is_active ? 1 : 0) }
-
-    if (room_id !== undefined) {
-      fields.push('room_id = ?')
-      values.push(room_id || null)
-    }
+    if (room_id !== undefined) { fields.push('room_id = ?'); values.push(room_id || null) }
 
     if (password) {
       const hash = await bcrypt.hash(password, 10)
@@ -147,35 +182,18 @@ router.put('/update/:id', adminAuth, async (req, res, next) => {
       values.push(hash)
     }
 
+    // Execute update only if at least one field is provided
     if (fields.length) {
       await pool.query(
-        `UPDATE tenants SET ${fields.join(', ')} WHERE id=? AND pg_id=?`,
+        `UPDATE tenants SET ${fields.join(', ')} WHERE id = ? AND pg_id = ?`,
         [...values, tenantId, pgId]
       )
     }
 
-    // Update room occupancy
-    if (room_id !== undefined && prevRoomId !== room_id) {
-      if (prevRoomId) {
-        await pool.query(
-          'UPDATE rooms SET is_occupied = 0 WHERE id=? AND pg_id=?',
-          [prevRoomId, pgId]
-        )
-      }
-      if (room_id) {
-        await pool.query(
-          'UPDATE rooms SET is_occupied = 1 WHERE id=? AND pg_id=?',
-          [room_id, pgId]
-        )
-      }
-    }
-
     res.json({ ok: true })
-
   } catch (err) {
     next(err)
   }
 })
-
 
 module.exports = router
