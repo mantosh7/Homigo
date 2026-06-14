@@ -6,7 +6,7 @@ import { ROOM_TYPES } from '../../../utils/constants'
 export default function RoomForm({ onSubmit, initialValues, disabled }) {
 
   const [room_number, setRoom] = useState(initialValues?.room_number ?? '')
-  const [room_type, setType] = useState(initialValues?.room_type ?? 'single_ac')
+  const [room_type, setType] = useState(initialValues?.room_type ?? 'single (AC)')
   const [capacity, setCap] = useState(initialValues?.capacity ?? 1)
   const [floor, setFloor] = useState(initialValues?.floor ?? '0')
   const [monthly_rent, setRent] = useState(initialValues?.monthly_rent ?? '')
