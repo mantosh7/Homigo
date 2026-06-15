@@ -2,10 +2,13 @@ const express = require('express');
 const pool = require('../db');
 const { adminAuth } = require('../middleware/auth');
 const AppError = require('../middleware/AppError');
+const validate = require('../middleware/validate')
+const { roomSchema } = require('../schemas/roomSchemas')
+
 const router = express.Router();
 
 // Add a new room
-router.post('/add', adminAuth, async (req, res, next) => {
+router.post('/add', adminAuth, validate(roomSchema), async (req, res, next) => {
   try {
     const { room_number, room_type, capacity, floor, monthly_rent } = req.body;
     const pgId = req.user.pgId;
@@ -49,7 +52,7 @@ router.get('/all', adminAuth, async (req, res, next) => {
 });
 
 // Update room details
-router.put('/update/:id', adminAuth, async (req, res, next) => {
+router.put('/update/:id', adminAuth, validate(roomSchema), async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const id = req.params.id;

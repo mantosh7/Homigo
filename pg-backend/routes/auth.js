@@ -2,8 +2,11 @@ const express = require('express');
 const pool = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const AppError = require('../middleware/AppError');
 const cookieParser = require('cookie-parser');
+const AppError = require('../middleware/AppError');
+const validate = require('../middleware/validate')
+const { adminSignupSchema, adminLoginSchema } = require('../schemas/authSchemas')
+
 
 require('dotenv').config();
 
@@ -15,7 +18,7 @@ router.use(express.json());
 router.use(cookieParser());
 
 // ADMIN SIGNUP
-router.post("/admin/signup", async (req, res, next) => {
+router.post("/admin/signup", validate(adminSignupSchema), async (req, res, next) => {
   try {
     const { pgName, pgAddress, name, email, password, otpVerified } = req.body;
 
@@ -23,16 +26,9 @@ router.post("/admin/signup", async (req, res, next) => {
       throw new AppError('Please verify email using OTP before signup', 403);
     }
 
-    if (!email || !password) {
-      throw new AppError(
-        'Email and password required',
-        400
-      );
-    }
-
-    const [rows] = await pool.query("SELECT id FROM admins WHERE email = ?", [email]);
-    if (rows.length > 0) {
-      throw new AppError('Admin already exists!', 409);
+    const [existing] = await pool.query("SELECT id FROM admins WHERE email = ?", [email]);
+    if (existing.length > 0) {
+      throw new AppError('An account with this email already exists', 409);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -78,7 +74,7 @@ router.post("/admin/signup", async (req, res, next) => {
 
 
 // ADMIN LOGIN
-router.post('/admin/login', async (req, res, next) => {
+router.post('/admin/login', validate(adminLoginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -89,8 +85,8 @@ router.post('/admin/login', async (req, res, next) => {
       throw new AppError('Invalid credentials', 401);
     }
 
-    const ok = await bcrypt.compare(password, admin.password_hash);
-    if (!ok) {
+    const passwordMatch = await bcrypt.compare(password, admin.password_hash);
+    if (!passwordMatch) {
       throw new AppError('Invalid credentials', 401);
     }
 
@@ -105,7 +101,9 @@ router.post('/admin/login', async (req, res, next) => {
     });
 
     res.json({ user: payload });
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 });
 
 // ADMIN LOGOUT
@@ -118,15 +116,18 @@ router.post('/admin/logout', (req, res) => {
   return res.json({ ok: true, message: 'Logged out' });
 });
 
-// ME - read user from cookie
+// Get current user from cookie 
+// Used by the frontend on page load to restore auth state
 router.get('/me', async (req, res) => {
   try {
     const token = req.cookies && req.cookies.token;
     if (!token) return res.status(200).json({ user: null });
+
     const payload = jwt.verify(token, JWT_SECRET);
     res.json({ user: payload });
+
   } catch (err) {
-    return res.status(200).json({ user: null });
+    res.json({ user: null })
   }
 });
 

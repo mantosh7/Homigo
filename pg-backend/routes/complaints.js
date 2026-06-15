@@ -2,10 +2,32 @@ const express = require('express');
 const pool = require('../db');
 const { adminAuth } = require('../middleware/auth');
 const AppError = require('../middleware/AppError');
+const validate = require('../middleware/validate')
+const { updateComplaintSchema } = require('../schemas/rentSchemas')
+
 const router = express.Router();
 
-// admin updates status
-router.put('/update/:id', adminAuth, async (req, res, next) => {
+
+//  Get all pending complaints 
+router.get('/all', adminAuth, async (req, res, next) => {
+  try {
+    const pgId = req.user.pgId;
+    const [rows] = await pool.query(
+      `SELECT * FROM complaints 
+        WHERE status = 'Pending' AND pg_id=? 
+        ORDER BY created_at DESC`,
+      [pgId]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    next(err)
+  }
+});
+
+
+// Update complaint status (Admin resolves or progresses it) 
+router.put('/update/:id', adminAuth, validate(updateComplaintSchema), async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
     const id = req.params.id;
@@ -26,20 +48,5 @@ router.put('/update/:id', adminAuth, async (req, res, next) => {
   }
 });
 
-router.get('/all', adminAuth, async (req, res, next) => {
-  try {
-    const pgId = req.user.pgId;
-    const [rows] = await pool.query(
-      `SELECT * 
-        FROM complaints 
-        WHERE status = ? AND pg_id=? 
-        ORDER BY created_at DESC`,
-      ['Pending', pgId]
-    );
-    res.json(rows);
-  } catch (err) {
-    next(err)
-  }
-});
 
 module.exports = router;

@@ -2,6 +2,8 @@ const express = require('express');
 const pool = require('../db');
 const { adminAuth } = require('../middleware/auth');
 const AppError = require('../middleware/AppError');
+const validate = require('../middleware/validate')
+const { createRentSchema } = require('../schemas/rentSchemas')
 
 const router = express.Router();
 
@@ -22,26 +24,10 @@ router.get('/pending', adminAuth, async (req, res, next) => {
 });
 
 
-router.post('/create', adminAuth, async (req, res, next) => {
+router.post('/create', adminAuth, validate(createRentSchema), async (req, res, next) => {
   try {
     const pgId = req.user.pgId;
-    let { tenant_id, amount, due_date } = req.body;
-
-    if (tenant_id === undefined || tenant_id === null || amount === undefined || amount === null) {
-      throw new AppError('Tenant and amount required', 400);
-    }
-
-    // normalize types
-    const tenantNum = Number(tenant_id);
-    tenant_id = Number.isNaN(tenantNum) ? tenant_id : tenantNum;
-
-    const amountNum = Number(amount);
-    if (Number.isNaN(amountNum)) {
-      throw new AppError('Invalid amount', 400);
-    }
-    amount = amountNum;
-
-    if (!due_date) due_date = null;
+    const { tenant_id, amount, due_date } = req.body;
 
     const [r] = await pool.query(
       `INSERT INTO rent_records 
@@ -56,17 +42,18 @@ router.post('/create', adminAuth, async (req, res, next) => {
   }
 });
 
+
+//  Mark a rent record as paid 
 router.put('/pay/:id', adminAuth, async (req, res, next) => {
   const id = req.params.id;
   const pgId = req.user.pgId;
-  const today = new Date();
 
   try {
     const [result] = await pool.query(
       `UPDATE rent_records
-        SET status = 'Paid', date_paid = ?
+        SET status = 'Paid', date_paid = NOW()
         WHERE id = ? AND pg_id=?`,
-      [today, id, pgId]
+      [id, pgId]
     );
 
     if (result.affectedRows === 0) {
