@@ -1,6 +1,6 @@
 const { z } = require('zod')
 
-// Admin Signup Schema 
+// admin signup schema 
 const adminSignupSchema = z.object({
     pgName: z.string().min(2, 'PG name must be at least 2 characters'),
     pgAddress: z.string().optional(),
@@ -10,16 +10,34 @@ const adminSignupSchema = z.object({
     otpVerified: z.boolean({ required_error: 'OTP verification is required' })
 })
 
-// Admin Login Schema 
+// admin login schema 
 const adminLoginSchema = z.object({
     email: z.string().email('Please provide a valid email address'),
     password: z.string().min(1, 'Password is required')
 })
 
-// Tenant Login Schema 
+// tenant login schema 
 const tenantLoginSchema = z.object({
     email: z.string().email('Please provide a valid email address'),
     password: z.string().min(1, 'Password is required')
 })
 
-module.exports = { adminSignupSchema, adminLoginSchema, tenantLoginSchema }
+
+//  forgot password schema
+const forgotPasswordSchema = z.object({
+    email: z.string().email('Please provide a valid email address')
+})
+
+//  reset password schema
+const resetPasswordSchema = z.object({
+    token: z.string().min(1, 'Token is required'),
+    password: z.string().min(8, 'Password must be at least 8 characters')
+})
+
+module.exports = {
+    adminSignupSchema,
+    adminLoginSchema,
+    tenantLoginSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema
+}

@@ -92,12 +92,12 @@ export default function TenantLogin() {
 
         {/* Footer */}
         <p className="mt-5 text-center text-sm text-gray-500">
-          Don't have an account?{' '}
+          Forgot password?{' '}
           <button
-            onClick={() => nav('/tenant/register')}
-            className="text-[#F89A85] transition-colors duration-200 hover:text-[#F67D61] hover:underline font-medium"
+            onClick={() => nav('/tenant/forgot-password')}
+            className="text-[#F89A85] hover:underline font-medium"
           >
-            Sign Up
+            Reset here
           </button>
         </p>
 

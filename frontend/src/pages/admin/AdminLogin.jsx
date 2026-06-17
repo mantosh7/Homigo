@@ -33,7 +33,7 @@ export default function AdminLogin() {
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-white mb-1">Admin Login</h2>
-          <p className="text-sm text-gray-500">Sign in to your admin account</p>
+          <p className="text-sm text-gray-400">Sign in to your admin account</p>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
@@ -82,7 +82,17 @@ export default function AdminLogin() {
         </form>
 
         {/* Footer */}
-        <p className="mt-5 text-center text-sm text-gray-500">
+        <p className="mt-5 text-center text-sm text-gray-400">
+          Forgot password?{' '}
+          <button
+            onClick={() => nav('/admin/forgot-password')}
+            className="text-[#F89A85] hover:underline font-medium"
+          >
+            Reset here
+          </button>
+        </p>
+
+        <p className="mt-5 text-center text-sm text-gray-400">
           Don't have an account?{' '}
           <button
             onClick={() => nav('/admin/signup')}

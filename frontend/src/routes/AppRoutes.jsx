@@ -7,18 +7,21 @@ import RoomsList from '../pages/admin/Rooms/RoomsList'
 import TenantsList from '../pages/admin/Tenants/TenantsList'
 import RentList from '../pages/admin/Rent/RentList'
 import ComplaintsList from '../pages/admin/Complaints/ComplaintsList'
+import AdminAnalytics from '@/pages/admin/AdminAnalytics'
+
 import TenantLogin from '../pages/tenant/TenantLogin'
 import TenantLayout from '../pages/tenant/TenantLayout'
 import TenantDashboard from '../pages/tenant/TenantDashboard'
-import useAuth from '../hooks/useAuth'
 import MyRent from '../pages/tenant/MyRent'
 import Complaints from '@/pages/tenant/complaints'
-import SetPassword from '@/pages/SetPassword'
-
+import Profile from '@/pages/tenant/Profile'
 
 import Landing from '../pages/Landing'
-import Profile from '@/pages/tenant/Profile'
-import AdminAnalytics from '@/pages/admin/AdminAnalytics'
+import SetPassword from '@/pages/SetPassword'
+import ForgotPassword from '@/pages/ForgotPassword'
+import ResetPassword from '@/pages/ResetPassword'
+
+import useAuth from '../hooks/useAuth'
 
 function RequireAdmin({ children }) {
   const { user, loading } = useAuth()
@@ -41,8 +44,18 @@ export default function AppRoutes() {
       {/* Landing page (no topbar) */}
       <Route path="/" element={<Landing />} />
 
+
       {/* Public invite route — no auth needed */}
       <Route path="/set-password" element={<SetPassword />} />
+
+
+      {/* Password reset flow */}
+      <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+      <Route path="/tenant/forgot-password" element={<ForgotPassword />} />
+
+      {/* User clicks reset link from email — submits new password */}
+      <Route path="/reset-password" element={<ResetPassword />} />
+
 
       {/* Admin auth & protected area */}
       <Route path="/admin/login" element={<AdminLogin />} />
