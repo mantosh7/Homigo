@@ -4,6 +4,25 @@ import useAuth from '../../hooks/useAuth'
 import HomeButton from '@/components/ui/HomeButton'
 import api from '@/services/api'
 
+function InputField({ label, type = 'text', value, onChange, placeholder, required, disabled }) {
+  return (
+    <div>
+      <label className="block text-sm text-white mb-1.5">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        disabled={disabled}
+        className="w-full px-3 py-2.5 rounded-lg text-sm text-white
+                   bg-white/5 border border-white/10
+                   placeholder:text-gray-600 disabled:opacity-40 transition"
+      />
+    </div>
+  )
+}
+
 export default function AdminSignup() {
   const [form, setForm] = useState({
     pgName: '', pgAddress: '', name: '', email: '', password: '', confirmPassword: ''
@@ -54,25 +73,6 @@ export default function AdminSignup() {
     } catch (err) {
       alert('Signup failed: ' + (err.message || 'Please try again'))
     } finally { setLoading(false) }
-  }
-
-  function InputField({ label, type = 'text', value, onChange, placeholder, required, disabled }) {
-    return (
-      <div>
-        <label className="block text-sm text-white mb-1.5">{label}</label>
-        <input
-          type={type}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          required={required}
-          disabled={disabled}
-          className="w-full px-3 py-2.5 rounded-lg text-sm text-white
-                   bg-white/5 border border-white/10
-                   placeholder:text-gray-600 disabled:opacity-40 transition"
-        />
-      </div>
-    )
   }
 
   return (

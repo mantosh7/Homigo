@@ -14,7 +14,7 @@ require('dotenv').config();
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
-const COOKIE_SECURE = (process.env.COOKIE_SECURE === 'true');
+const isProduction = process.env.NODE_ENV === 'production'
 
 router.use(express.json());
 router.use(cookieParser());
@@ -117,8 +117,8 @@ router.post('/admin/login', validate(adminLoginSchema), async (req, res, next) =
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: COOKIE_SECURE,
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 12 * 3600 * 1000
     });
 
@@ -223,8 +223,8 @@ router.post('/admin/reset-password', validate(resetPasswordSchema), async (req, 
 router.post('/admin/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: COOKIE_SECURE,
-    sameSite: 'lax'
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
   });
   return res.json({ ok: true, message: 'Logged out' });
 });

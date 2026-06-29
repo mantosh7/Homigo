@@ -11,7 +11,7 @@ const transporter = require('../utils/email')
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
-const COOKIE_SECURE = (process.env.COOKIE_SECURE === 'true');
+const isProduction = process.env.NODE_ENV === 'production'
 const FRONTEND = process.env.FRONTEND_ORIGIN || 'http://localhost:5173'
 
 
@@ -71,9 +71,9 @@ router.post('/login', validate(tenantLoginSchema), async (req, res, next) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: COOKIE_SECURE,
-      sameSite: 'lax',
-      maxAge: 8 * 60 * 60 * 1000
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      maxAge: 12 * 3600 * 1000
     });
 
     return res.json({
@@ -91,8 +91,8 @@ router.post('/login', validate(tenantLoginSchema), async (req, res, next) => {
 router.post('/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: COOKIE_SECURE,
-    sameSite: 'lax'
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
   });
   res.json({ ok: true });
 });
