@@ -13,7 +13,7 @@ import TenantLogin from '../pages/tenant/TenantLogin'
 import TenantLayout from '../pages/tenant/TenantLayout'
 import TenantDashboard from '../pages/tenant/TenantDashboard'
 import MyRent from '../pages/tenant/MyRent'
-import Complaints from '@/pages/tenant/complaints'
+import Complaints from '@/pages/tenant/Complaints'
 import Profile from '@/pages/tenant/Profile'
 
 import Landing from '../pages/Landing'
