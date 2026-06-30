@@ -5,24 +5,32 @@ const isProduction = process.env.NODE_ENV === 'production'
 let transporter
 
 if (isProduction) {
-    // Production (Render) 
-    const { Resend } = require('resend')
-    const resend = new Resend(process.env.RESEND_API_KEY)
-
+    // Production (Brevo) 
     transporter = {
-        sendMail: async ({ to, subject, text, from }) => {
-            const { data, error } = await resend.emails.send({
-                from: from || 'Homigo <onboarding@resend.dev>',
-                to,
-                subject,
-                text
+        sendMail: async ({ to, subject, text }) => {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'api-key': process.env.BREVO_API_KEY
+                },
+                body: JSON.stringify({
+                    sender: {
+                        name: 'Homigo',
+                        email: process.env.BREVO_SENDER_EMAIL
+                    },
+                    to: [{ email: to }],
+                    subject,
+                    textContent: text
+                })
             })
 
-            if (error) {
-                throw new Error(error.message || 'Failed to send email via Resend')
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}))
+                throw new Error(errorData.message || 'Failed to send email via Brevo')
             }
 
-            return data
+            return response.json()
         }
     }
 

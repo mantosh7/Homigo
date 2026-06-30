@@ -23,6 +23,8 @@ const { loginLimiter, apiLimiter } = require('./middleware/rateLimiter');
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
 
+app.set('trust proxy', 1); 
+
 app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
