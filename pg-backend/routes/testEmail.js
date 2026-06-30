@@ -19,7 +19,6 @@ router.post("/send", async (req, res, next) => {
     await saveAdminOtp(email, otp);
 
     await transporter.sendMail({
-      from: `"Homigo" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Homigo OTP Test",
       text: `Your OTP is ${otp}. It is valid for 5 minutes.`,

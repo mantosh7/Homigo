@@ -18,7 +18,6 @@ async function sendInviteEmail(email, full_name, token) {
   const inviteLink = `${FRONTEND}/set-password?token=${token}`
 
   await transporter.sendMail({
-    from: `"Homigo" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Welcome to Homigo — Set Your Password',
     text: `Hi ${full_name},\n\nYour account has been created on Homigo.\n\nSet your password here:\n${inviteLink}\n\nThis link expires in 24 hours.\n\nIf you did not expect this email, please ignore it.`

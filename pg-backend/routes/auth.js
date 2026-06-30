@@ -32,7 +32,6 @@ async function sendResetEmail(email, name, token) {
   const resetLink = `${FRONTEND}/reset-password?token=${token}`
 
   await transporter.sendMail({
-    from: `"Homigo" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Reset Your Homigo Password',
     text: `Hi ${name},\n\nYou requested to reset your password.\n\nClick here to set a new password:\n${resetLink}\n\nThis link expires in 15 minutes.\n\nIf you did not request this, please ignore this email.`
